@@ -30,8 +30,9 @@ export interface Business {
   whatsapp: string;
   description: string;
   imageUrl: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "paused";
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface BusinessRow {
@@ -51,6 +52,56 @@ export interface Review {
   rating: number;
   comment: string;
   createdAt: string;
+}
+
+export interface FeedPost {
+  id: number;
+  businessId: number;
+  clerkUserId: string;
+  title: string;
+  body: string;
+  imageUrl: string;
+  createdAt: string;
+}
+
+export interface FeedPostRow {
+  post: FeedPost;
+  business: Business;
+  society: Society | null;
+}
+
+export interface DailyDeal {
+  id: number;
+  businessId: number;
+  clerkUserId: string;
+  title: string;
+  description: string;
+  expiresAt: string;
+  createdAt: string;
+}
+
+export interface DealRow {
+  deal: DailyDeal;
+  business: Business;
+  society: Society | null;
+}
+
+export interface FavouriteRow {
+  fav: { id: number; clerkUserId: string; businessId: number; createdAt: string };
+  business: Business;
+  society: Society | null;
+  avgRating: number;
+  reviewCount: number;
+  leadCount: number;
+}
+
+export interface SellerAnalytics {
+  leadsThisMonth: number;
+  totalLeads: number;
+  repeatLeads: number;
+  avgRating: number;
+  reviewCount: number;
+  subscriptionStartDate: string;
 }
 
 export interface AdminStats {
@@ -79,6 +130,10 @@ export const api = {
     update: (id: number, data: Record<string, unknown>) =>
       request<Business>(`/businesses/${id}`, { method: "PUT", body: JSON.stringify(data) }),
     mine: () => request<BusinessRow[]>("/my-businesses"),
+    pause: (id: number) =>
+      request<Business>(`/businesses/${id}/pause`, { method: "PATCH" }),
+    unpause: (id: number) =>
+      request<Business>(`/businesses/${id}/unpause`, { method: "PATCH" }),
   },
   leads: {
     track: (businessId: number, source = "whatsapp") =>
@@ -87,6 +142,28 @@ export const api = {
   reviews: {
     create: (data: { businessId: number; reviewerName: string; rating: number; comment: string }) =>
       request<Review>("/reviews", { method: "POST", body: JSON.stringify(data) }),
+  },
+  feed: {
+    list: (societyId?: number) => {
+      const qs = societyId ? `?societyId=${societyId}` : "";
+      return request<FeedPostRow[]>(`/feed${qs}`);
+    },
+    create: (data: { businessId: number; title: string; body: string; imageUrl?: string }) =>
+      request<FeedPost>("/feed", { method: "POST", body: JSON.stringify(data) }),
+  },
+  deals: {
+    list: () => request<DealRow[]>("/deals"),
+    create: (data: { businessId: number; title: string; description: string; expiresAt: string }) =>
+      request<DailyDeal>("/deals", { method: "POST", body: JSON.stringify(data) }),
+  },
+  favourites: {
+    list: () => request<FavouriteRow[]>("/favourites"),
+    ids: () => request<number[]>("/favourites/ids"),
+    toggle: (businessId: number) =>
+      request<{ saved: boolean }>("/favourites/toggle", { method: "POST", body: JSON.stringify({ businessId }) }),
+  },
+  analytics: {
+    seller: () => request<SellerAnalytics>("/analytics/seller"),
   },
   admin: {
     stats: () => request<AdminStats>("/admin/stats"),

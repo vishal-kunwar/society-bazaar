@@ -1,0 +1,228 @@
+Convert Society Bazaar into a complete ready-to-use MVP for both sellers and buyers.
+
+Important:
+Do not redesign the website.
+Keep the existing UI and improve only functionality.
+All buttons must work.
+“List Your Business” button must open the seller registration page.
+“Start Selling Today” must open seller registration.
+“Find Local Businesses” must scroll to business listings.
+WhatsApp buttons must open WhatsApp with prefilled message.
+
+Build full backend functionality using Supabase.
+
+SETUP
+Use Supabase for:
+
+* Authentication
+* Database
+* Storage
+* Row Level Security
+
+Create complete setup instructions for:
+
+* Supabase project
+* Environment variables
+* Database tables
+* Storage bucket
+* Deployment
+
+AUTHENTICATION
+Add:
+
+* Sign up
+* Login
+* Logout
+* User roles: buyer, seller, admin
+* Protected seller dashboard
+* Protected admin dashboard
+
+DATABASE TABLES
+Create these tables:
+
+* users
+* societies
+* businesses
+* categories
+* business_photos
+* leads
+* reviews
+* favourites
+* society_feed_posts
+* daily_deals
+* subscriptions
+* notifications
+
+SELLER FLOW
+Seller should be able to:
+
+* Sign up
+* Create business profile
+* Add business name
+* Add owner name
+* Add society
+* Add category
+* Add description
+* Add phone number
+* Add WhatsApp number
+* Upload business photos
+* Submit listing for approval
+* Edit business profile
+* Pause business listing
+* View dashboard
+* Post society feed updates
+* Create daily deals
+* View leads
+* View reviews
+* View monthly performance report
+
+BUYER FLOW
+Buyer should be able to:
+
+* Browse businesses by society
+* Search businesses
+* Filter by category
+* View business detail page
+* Contact seller on WhatsApp
+* Repeat order
+* Save favourite businesses
+* View My Favourites
+* Leave review after contact
+* View society feed
+* View daily deals
+* View trending businesses
+
+ADMIN FLOW
+Admin should be able to:
+
+* Login
+* Approve or reject business listings
+* View all sellers
+* View all buyers
+* View all societies
+* View total leads
+* View top businesses
+* View top categories
+* Suspend businesses
+
+WHATSAPP LEAD TRACKING
+When buyer clicks WhatsApp:
+
+1. Save lead in Supabase leads table
+2. Open WhatsApp with this prefilled message:
+
+“Hi, I found your business on Society Bazaar and would like to know more.”
+
+3. Show review reminder after click:
+    “Had a good experience? Leave a review.”
+4. Increase WhatsApp click count in seller analytics.
+
+ENGAGEMENT FEATURES
+Add these features so Society Bazaar does not become dead after first contact.
+
+1. Society Feed
+
+* Sellers can post daily or weekly updates.
+* Examples:
+    * Fresh tiffin menu today
+    * Weekend cake offer
+    * New yoga batch starting Monday
+    * Tuition admissions open
+* Show feed posts on homepage.
+* Feed post should include image, title, text, seller name, business name, time, and WhatsApp button.
+
+2. Daily Deals Section
+
+* Sellers can post limited-time offers.
+* Add countdown style UI.
+* Example:
+    “Today only: 10% off on lunch tiffin”
+* Deals should have expiry time.
+* Expired deals should not show.
+
+3. Repeat Order Button
+
+* On business cards and business detail pages, add “Order Again” button.
+* Clicking it should open WhatsApp with this message:
+
+“Hi, I ordered/contacted you earlier through Society Bazaar. I want to order again.”
+
+* Track repeat order clicks separately.
+
+4. Favourite Businesses
+
+* Buyers can save favourite sellers.
+* Add heart/save button on business cards.
+* Add “My Favourites” page.
+* Saved businesses should persist in Supabase.
+
+5. New in Your Society
+
+* Show newly added businesses.
+* Add “New” badge for businesses created in the last 14 days.
+
+6. Trending This Week
+
+* Show most viewed and most contacted businesses this week.
+* Use views and WhatsApp clicks from Supabase.
+
+7. Seller Update Reminder
+    In seller dashboard show:
+    “Post an update today to get more visibility.”
+
+Add button:
+“Post Society Update”
+
+8. Lead Analytics Reminder
+    In seller dashboard show:
+    “You received 21 leads this month from Society Bazaar.”
+
+Use real lead count from Supabase.
+
+9. Review Reminder
+    After WhatsApp contact show:
+    “Had a good experience? Leave a review.”
+
+Add review form with rating and text.
+
+10. Monthly Performance Report
+    Seller dashboard should show real stats:
+
+* Profile views
+* WhatsApp clicks
+* Leads this month
+* Repeat customers
+* Reviews received
+* Average rating
+* Top performing post
+* Top performing deal
+
+SUBSCRIPTION
+Add subscription logic:
+
+* First 6 months free
+* After 6 months listing becomes inactive if payment is not active
+* ₹199/month plan
+* Add placeholder Razorpay integration structure
+* Do not require real Razorpay keys yet
+* Show subscription status in seller dashboard
+
+IMPORTANT UX
+
+* Keep mobile responsive
+* Make all navbar links work
+* Make all CTA buttons work
+* Make forms submit properly
+* Show loading states
+* Show success messages
+* Show error messages
+* Use real data from Supabase instead of hardcoded data where possible
+* Keep some sample data only as fallback
+
+FINAL OUTPUT
+Implement the code directly in this Replit project.
+Create all required files.
+Fix any build errors.
+Run the app and make sure preview works.
+Do not stop after giving instructions.
+Actually implement the working MVP.

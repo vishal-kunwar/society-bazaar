@@ -5,6 +5,10 @@ import businessesRouter from "./businesses";
 import leadsRouter from "./leads";
 import reviewsRouter from "./reviews";
 import adminRouter from "./admin";
+import feedRouter from "./feed";
+import dealsRouter from "./deals";
+import favouritesRouter from "./favourites";
+import analyticsRouter from "./analytics";
 
 const router: IRouter = Router();
 
@@ -14,5 +18,9 @@ router.use(businessesRouter);
 router.use(leadsRouter);
 router.use(reviewsRouter);
 router.use(adminRouter);
+router.use(feedRouter);
+router.use(dealsRouter);
+router.use(favouritesRouter);
+router.use(analyticsRouter);
 
 export default router;

@@ -26,7 +26,7 @@ router.get("/businesses", async (req: Request, res: Response) => {
     .leftJoin(leadsTable, eq(leadsTable.businessId, businessesTable.id))
     .where(
       and(
-        eq(businessesTable.status, approvedStatus as "approved" | "pending" | "rejected"),
+        eq(businessesTable.status, approvedStatus as "approved" | "pending" | "rejected" | "paused"),
         societyId ? eq(businessesTable.societyId, Number(societyId)) : undefined,
         category ? eq(businessesTable.category, category as string) : undefined,
       ),
@@ -117,6 +117,46 @@ router.put("/businesses/:id", requireAuth, async (req: Request, res: Response) =
     .where(eq(businessesTable.id, id))
     .returning();
 
+  res.json(updated);
+});
+
+router.patch("/businesses/:id/pause", requireAuth, async (req: Request, res: Response) => {
+  const { userId } = req as AuthedRequest;
+  const id = Number(req.params.id);
+  const [biz] = await db
+    .select()
+    .from(businessesTable)
+    .where(and(eq(businessesTable.id, id), eq(businessesTable.clerkUserId, userId)))
+    .limit(1);
+  if (!biz) {
+    res.status(404).json({ error: "Not found or not authorized" });
+    return;
+  }
+  const [updated] = await db
+    .update(businessesTable)
+    .set({ status: "paused" })
+    .where(eq(businessesTable.id, id))
+    .returning();
+  res.json(updated);
+});
+
+router.patch("/businesses/:id/unpause", requireAuth, async (req: Request, res: Response) => {
+  const { userId } = req as AuthedRequest;
+  const id = Number(req.params.id);
+  const [biz] = await db
+    .select()
+    .from(businessesTable)
+    .where(and(eq(businessesTable.id, id), eq(businessesTable.clerkUserId, userId)))
+    .limit(1);
+  if (!biz) {
+    res.status(404).json({ error: "Not found or not authorized" });
+    return;
+  }
+  const [updated] = await db
+    .update(businessesTable)
+    .set({ status: "pending" })
+    .where(eq(businessesTable.id, id))
+    .returning();
   res.json(updated);
 });
 
