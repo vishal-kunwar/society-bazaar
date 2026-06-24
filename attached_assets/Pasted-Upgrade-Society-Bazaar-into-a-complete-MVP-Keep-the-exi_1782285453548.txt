@@ -1,0 +1,134 @@
+Upgrade Society Bazaar into a complete MVP.
+
+Keep the existing design and improve it professionally.
+
+Add the following features:
+
+HERO SECTION
+
+* Headline: “Turn Your Home Business Into a Trusted Society Brand”
+* Subheadline: “Get discovered by residents in your apartment society. First 6 months free.”
+* Two CTA buttons:
+    1. Find Local Businesses
+    2. Start Selling Today
+
+SELLER ONBOARDING PAGE
+
+* Create a dedicated seller registration page
+* Business Name
+* Owner Name
+* Society Name
+* Category
+* Phone Number
+* WhatsApp Number
+* Business Description
+* Upload Business Photos
+* Submit Listing button
+
+SOCIETY SELECTION
+
+* Add a society selection dropdown
+* Sample societies:
+    * Sunshine Residency
+    * Green Valley Apartments
+    * Lake View Towers
+    * Silver Heights
+    * Palm Residency
+
+BUSINESS DETAIL PAGE
+
+* Business Image Gallery
+* Business Description
+* Owner Name
+* Society Name
+* Category
+* Rating
+* Reviews
+* Verified Resident Badge
+* WhatsApp Contact Button
+
+VERIFIED RESIDENT BADGE
+
+* Green verified badge
+* Show on all verified businesses
+
+REVIEWS & RATINGS
+
+* Customer ratings out of 5
+* Customer review section
+* Display average rating
+
+SELLER DASHBOARD PREVIEW
+Create a professional analytics dashboard showing:
+
+* Profile Views: 184
+* WhatsApp Clicks: 37
+* New Leads This Month: 21
+* Total Leads: 108
+* Reviews: 12
+* Rating: 4.8
+
+Add charts and analytics cards.
+
+WHATSAPP LEAD TRACKING
+When WhatsApp button is clicked, use this prefilled message:
+
+“Hi, I found your business on Society Bazaar and would like to know more.”
+
+Track the click as a lead event.
+
+LEAD COUNTER
+Show:
+
+* Total Leads
+* Monthly Leads
+* Weekly Leads
+* Conversion Rate
+
+PRICING SECTION
+Create a professional pricing section:
+
+Starter Plan
+
+* First 6 Months Free
+
+Growth Plan
+
+* ₹199/month
+* Unlimited Listings
+* Lead Analytics
+* Verified Badge
+* Priority Placement
+
+WHY SELLERS JOIN
+Add benefits section:
+
+* Get discovered by residents
+* Generate new customers
+* Build trust within society
+* Grow home-based business
+* Track leads and enquiries
+
+ADMIN DASHBOARD PREVIEW
+Show:
+
+* Total Businesses
+* Active Sellers
+* Total Leads Generated
+* Top Categories
+* Top Performing Businesses
+
+DESIGN IMPROVEMENTS
+
+* Premium startup-style UI
+* Better spacing
+* Better typography
+* Smooth animations
+* Mobile responsive
+* Professional color palette
+* Modern cards and sections
+
+IMPORTANT:
+Do not replace the current design.
+Enhance the existing website and connect all pages together with navigation.
+Create a realistic clickable MVP experience.

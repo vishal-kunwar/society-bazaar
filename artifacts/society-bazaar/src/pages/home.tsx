@@ -18,7 +18,9 @@ import {
   TrendingUp,
   CheckCircle2,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  Users,
+  LayoutDashboard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,16 +33,32 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { useLocation } from "wouter";
+import { businesses } from "@/data/businesses";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [, setLocation] = useLocation();
 
   const scrollToSection = (id: string) => {
     setIsMobileMenuOpen(false);
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
+    } else {
+      setLocation("/");
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }, 100);
     }
+  };
+
+  const trackLead = (businessName: string) => {
+    const key = `lead_count_${businessName}`;
+    const current = parseInt(localStorage.getItem(key) || "0", 10);
+    localStorage.setItem(key, (current + 1).toString());
   };
 
   const categories = [
@@ -52,57 +70,6 @@ export default function Home() {
     { icon: Sparkles, label: "Beauty & Wellness" },
     { icon: Wrench, label: "Home Services" },
     { icon: MoreHorizontal, label: "Others" },
-  ];
-
-  const businesses = [
-    {
-      name: "Priya's Home Tiffin",
-      category: "Food & Tiffin",
-      rating: 4.8,
-      stats: "120 orders",
-      description: "Freshly cooked North Indian meals delivered to your door",
-      image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80",
-    },
-    {
-      name: "Sugar Oven Bakery",
-      category: "Bakery & Sweets",
-      rating: 4.9,
-      stats: "85 orders",
-      description: "Custom cakes, cookies & muffins for every occasion",
-      image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800&q=80",
-    },
-    {
-      name: "BrightMinds Tuition",
-      category: "Tuition & Classes",
-      rating: 4.7,
-      stats: "45 students",
-      description: "Maths & Science for Std 5–10, small batches",
-      image: "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=800&q=80",
-    },
-    {
-      name: "Serenity Yoga",
-      category: "Fitness & Yoga",
-      rating: 5.0,
-      stats: "30 members",
-      description: "Morning yoga sessions on the society terrace",
-      image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80",
-    },
-    {
-      name: "Meera Tailoring",
-      category: "Tailoring",
-      rating: 4.6,
-      stats: "200+ clients",
-      description: "Blouses, alterations & custom stitching",
-      image: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=800&q=80",
-    },
-    {
-      name: "Glow Beauty Studio",
-      category: "Beauty & Wellness",
-      rating: 4.9,
-      stats: "60 clients",
-      description: "Bridal makeup, facials & threading at home",
-      image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80",
-    },
   ];
 
   const testimonials = [
@@ -143,10 +110,11 @@ export default function Home() {
             <button onClick={() => scrollToSection("categories")} data-testid="link-categories" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Categories</button>
             <button onClick={() => scrollToSection("sellers")} data-testid="link-sellers" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Sellers</button>
             <button onClick={() => scrollToSection("pricing")} data-testid="link-pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Pricing</button>
+            <button onClick={() => setLocation("/sell")} data-testid="link-sell" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Sell</button>
           </div>
 
           <div className="hidden md:flex items-center gap-4">
-            <Button variant="default" className="font-semibold shadow-sm hover-elevate">
+            <Button variant="default" className="font-semibold shadow-sm hover-elevate" onClick={() => setLocation("/sell")}>
               List Your Business
             </Button>
           </div>
@@ -168,7 +136,8 @@ export default function Home() {
             <button onClick={() => scrollToSection("categories")} className="text-left text-sm font-medium text-foreground py-2 border-b border-border/40">Categories</button>
             <button onClick={() => scrollToSection("sellers")} className="text-left text-sm font-medium text-foreground py-2 border-b border-border/40">Sellers</button>
             <button onClick={() => scrollToSection("pricing")} className="text-left text-sm font-medium text-foreground py-2 border-b border-border/40">Pricing</button>
-            <Button className="w-full mt-2">List Your Business</Button>
+            <button onClick={() => { setIsMobileMenuOpen(false); setLocation("/sell"); }} className="text-left text-sm font-medium text-foreground py-2 border-b border-border/40">Sell</button>
+            <Button className="w-full mt-2" onClick={() => { setIsMobileMenuOpen(false); setLocation("/sell"); }}>List Your Business</Button>
           </div>
         )}
       </nav>
@@ -192,19 +161,18 @@ export default function Home() {
                   Trusted by 500+ Societies
                 </Badge>
                 <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-foreground mb-6 leading-tight">
-                  Discover the best <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/70">home businesses</span> in your society.
+                  Turn Your Home Business Into a <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/70">Trusted Society Brand</span>
                 </h1>
                 <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
-                  From fresh home-cooked meals to expert tutors and talented tailors.
-                  Connect directly with your neighbours, support local, and build trust.
+                  Get discovered by residents in your apartment society. First 6 months free.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                   <Button size="lg" className="w-full sm:w-auto text-base h-14 px-8 shadow-md hover-elevate group" onClick={() => scrollToSection("sellers")}>
-                    Explore Businesses
+                    Find Local Businesses
                     <ChevronRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto text-base h-14 px-8 border-primary/20 text-foreground hover:bg-primary/5 hover-elevate">
-                    List My Business
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto text-base h-14 px-8 border-primary/20 text-foreground hover:bg-primary/5 hover-elevate" onClick={() => setLocation('/sell')}>
+                    Start Selling Today
                   </Button>
                 </div>
               </motion.div>
@@ -224,8 +192,10 @@ export default function Home() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="sunshine">Sunshine Residency</SelectItem>
-                      <SelectItem value="orchid">Orchid Petals</SelectItem>
-                      <SelectItem value="royal">Royal Enclave</SelectItem>
+                      <SelectItem value="green_valley">Green Valley Apartments</SelectItem>
+                      <SelectItem value="lake_view">Lake View Towers</SelectItem>
+                      <SelectItem value="silver_heights">Silver Heights</SelectItem>
+                      <SelectItem value="palm_residency">Palm Residency</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -237,7 +207,7 @@ export default function Home() {
                     className="border-0 shadow-none focus-visible:ring-0 px-0 h-12 w-full text-base bg-transparent placeholder:text-muted-foreground/70"
                   />
                 </div>
-                <Button size="lg" className="w-full md:w-auto h-12 rounded-xl px-8 shadow-sm">
+                <Button size="lg" className="w-full md:w-auto h-12 rounded-xl px-8 shadow-sm" onClick={() => scrollToSection("sellers")}>
                   Search
                 </Button>
               </motion.div>
@@ -260,6 +230,7 @@ export default function Home() {
                     key={idx}
                     whileHover={{ y: -5 }}
                     className="snap-start shrink-0 w-32 md:w-auto flex flex-col items-center justify-center p-6 bg-background rounded-2xl border border-border shadow-sm hover:border-primary/30 hover:shadow-md transition-all cursor-pointer group"
+                    onClick={() => scrollToSection("sellers")}
                   >
                     <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                       <Icon className="w-7 h-7 text-primary group-hover:text-primary-foreground" />
@@ -291,9 +262,11 @@ export default function Home() {
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.1 }}
                   key={idx}
+                  className="cursor-pointer"
+                  onClick={() => setLocation(`/business/${biz.id}`)}
                 >
-                  <Card className="overflow-hidden border-border/50 shadow-sm hover:shadow-lg transition-all duration-300 group hover-elevate">
-                    <div className="h-48 overflow-hidden relative">
+                  <Card className="overflow-hidden border-border/50 shadow-sm hover:shadow-lg transition-all duration-300 group hover-elevate h-full flex flex-col">
+                    <div className="h-48 overflow-hidden relative shrink-0">
                       <img src={biz.image} alt={biz.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                       <div className="absolute top-3 left-3">
                         <Badge className="bg-background/90 text-foreground backdrop-blur-sm hover:bg-background/90 border-0 font-medium">
@@ -301,10 +274,10 @@ export default function Home() {
                         </Badge>
                       </div>
                     </div>
-                    <CardContent className="p-6">
+                    <CardContent className="p-6 flex flex-col grow">
                       <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-bold text-xl text-foreground line-clamp-1">{biz.name}</h3>
-                        <div className="flex items-center gap-1 bg-accent/10 px-2 py-1 rounded-md">
+                        <h3 className="font-bold text-xl text-foreground line-clamp-1 group-hover:text-primary transition-colors">{biz.name}</h3>
+                        <div className="flex items-center gap-1 bg-accent/10 px-2 py-1 rounded-md shrink-0">
                           <Star className="w-4 h-4 fill-accent text-accent" />
                           <span className="text-sm font-bold text-foreground">{biz.rating}</span>
                         </div>
@@ -317,9 +290,13 @@ export default function Home() {
                           {biz.stats}
                         </span>
                         <a 
-                          href="https://wa.me/919999999999" 
+                          href={`https://wa.me/919999999999?text=Hi%2C%20I%20found%20your%20business%20on%20Society%20Bazaar%20and%20would%20like%20to%20know%20more.`}
                           target="_blank" 
                           rel="noopener noreferrer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            trackLead(biz.name);
+                          }}
                           className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 shadow-sm hover-elevate h-9 px-4 py-2 bg-[#25D366] text-white hover:bg-[#20bd5a]"
                         >
                           <MessageCircle className="w-4 h-4 mr-2" />
@@ -348,7 +325,7 @@ export default function Home() {
                   Get a dedicated storefront link, track inquiries, and manage your products easily from your phone. No technical skills required.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
-                  <Button size="lg" variant="secondary" className="w-full sm:w-auto font-bold text-primary hover-elevate">
+                  <Button size="lg" variant="secondary" className="w-full sm:w-auto font-bold text-primary hover-elevate" onClick={() => setLocation("/sell")}>
                     Create Store Now
                   </Button>
                   <Button size="lg" variant="outline" className="w-full sm:w-auto border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
@@ -362,7 +339,7 @@ export default function Home() {
                   initial={{ opacity: 0, x: 50 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
-                  className="bg-background rounded-2xl shadow-2xl p-6 border border-border/20 max-w-md mx-auto transform rotate-2 hover:rotate-0 transition-transform duration-500"
+                  className="bg-background rounded-2xl shadow-2xl p-6 border border-border/20 max-w-lg mx-auto"
                 >
                   <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
                     <div className="flex items-center gap-3">
@@ -376,18 +353,53 @@ export default function Home() {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-muted p-4 rounded-xl">
-                      <p className="text-xs text-muted-foreground font-medium mb-1">Inquiries this week</p>
-                      <p className="text-2xl font-bold text-foreground">12</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+                    <div className="bg-muted p-4 rounded-xl text-center">
+                      <p className="text-xs text-muted-foreground font-medium mb-1">Profile Views</p>
+                      <p className="text-xl font-bold text-foreground">184</p>
                     </div>
-                    <div className="bg-muted p-4 rounded-xl">
+                    <div className="bg-muted p-4 rounded-xl text-center">
+                      <p className="text-xs text-muted-foreground font-medium mb-1">WhatsApp Clicks</p>
+                      <p className="text-xl font-bold text-foreground">37</p>
+                    </div>
+                    <div className="bg-muted p-4 rounded-xl text-center">
+                      <p className="text-xs text-muted-foreground font-medium mb-1">New Leads</p>
+                      <p className="text-xl font-bold text-foreground">21</p>
+                    </div>
+                    <div className="bg-muted p-4 rounded-xl text-center">
+                      <p className="text-xs text-muted-foreground font-medium mb-1">Total Leads</p>
+                      <p className="text-xl font-bold text-foreground">108</p>
+                    </div>
+                    <div className="bg-muted p-4 rounded-xl text-center">
+                      <p className="text-xs text-muted-foreground font-medium mb-1">Reviews</p>
+                      <p className="text-xl font-bold text-foreground">12</p>
+                    </div>
+                    <div className="bg-muted p-4 rounded-xl text-center">
                       <p className="text-xs text-muted-foreground font-medium mb-1">Rating</p>
-                      <div className="flex items-center">
-                        <p className="text-2xl font-bold text-foreground mr-2">4.9</p>
+                      <div className="flex justify-center items-center">
+                        <p className="text-xl font-bold text-foreground mr-1">4.8</p>
                         <Star className="w-4 h-4 fill-accent text-accent" />
                       </div>
                     </div>
+                  </div>
+
+                  <div className="mb-6 h-40">
+                    <p className="text-xs text-muted-foreground font-medium mb-2">Weekly Leads</p>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={[
+                        { name: 'Mon', leads: 3 },
+                        { name: 'Tue', leads: 5 },
+                        { name: 'Wed', leads: 2 },
+                        { name: 'Thu', leads: 7 },
+                        { name: 'Fri', leads: 4 },
+                        { name: 'Sat', leads: 6 },
+                        { name: 'Sun', leads: 4 },
+                      ]}>
+                        <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} />
+                        <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px', border: '1px solid hsl(var(--border))' }} />
+                        <Bar dataKey="leads" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                   
                   <Button className="w-full bg-primary/10 text-primary hover:bg-primary/20 mb-3" variant="ghost">
@@ -398,6 +410,36 @@ export default function Home() {
                   </Button>
                 </motion.div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Why Sellers Join */}
+        <section className="py-24">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Why home-based sellers love us</h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">Everything you need to run and grow your business within your community.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[
+                { icon: MapPin, title: "Get Discovered", desc: "Get found by residents searching in your own society" },
+                { icon: Users, title: "Generate Customers", desc: "Convert neighbours into loyal paying customers" },
+                { icon: ShieldCheck, title: "Build Trust", desc: "Verified resident badge builds credibility fast" },
+                { icon: TrendingUp, title: "Grow Your Business", desc: "Track growth with real analytics and insights" },
+                { icon: MessageCircle, title: "Track Leads", desc: "Know exactly how many people enquired about your business" },
+                { icon: LayoutDashboard, title: "Zero Tech Skills", desc: "Set up your storefront in minutes, no laptop needed" }
+              ].map((benefit, idx) => (
+                <Card key={idx} className="bg-background border-border/50 shadow-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
+                      <benefit.icon className="w-6 h-6 text-primary" />
+                    </div>
+                    <h3 className="font-bold text-xl text-foreground mb-2">{benefit.title}</h3>
+                    <p className="text-muted-foreground">{benefit.desc}</p>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         </section>
@@ -416,7 +458,7 @@ export default function Home() {
                 <div className="absolute top-0 right-0 bg-accent text-accent-foreground text-xs font-bold px-3 py-1 rounded-bl-lg z-10">
                   MOST POPULAR
                 </div>
-                <CardContent className="p-8">
+                <CardContent className="p-8 flex flex-col h-full">
                   <h3 className="text-2xl font-bold text-foreground mb-2">Free Start</h3>
                   <div className="flex items-baseline mb-6">
                     <span className="text-5xl font-extrabold text-foreground">₹0</span>
@@ -424,7 +466,7 @@ export default function Home() {
                   </div>
                   <p className="text-muted-foreground mb-8 pb-8 border-b border-border/50">Perfect for getting started and testing the waters in your society.</p>
                   
-                  <ul className="space-y-4 mb-8">
+                  <ul className="space-y-4 mb-8 grow">
                     {['List unlimited products', 'Direct WhatsApp inquiries', 'Basic storefront profile', 'Community visibility'].map((feature, i) => (
                       <li key={i} className="flex items-start">
                         <CheckCircle2 className="w-5 h-5 text-primary mr-3 shrink-0 mt-0.5" />
@@ -433,14 +475,14 @@ export default function Home() {
                     ))}
                   </ul>
                   
-                  <Button size="lg" className="w-full hover-elevate">Start Free Now</Button>
+                  <Button size="lg" className="w-full hover-elevate" onClick={() => setLocation("/sell")}>Start Free Now</Button>
                   <p className="text-xs text-center text-muted-foreground mt-4">No credit card needed</p>
                 </CardContent>
               </Card>
 
               {/* Pro Plan */}
               <Card className="border-border/50 shadow-sm bg-background/50 relative">
-                <CardContent className="p-8">
+                <CardContent className="p-8 flex flex-col h-full">
                   <h3 className="text-2xl font-bold text-foreground mb-2">Growth Plan</h3>
                   <div className="flex items-baseline mb-6">
                     <span className="text-5xl font-extrabold text-foreground">₹199</span>
@@ -448,11 +490,11 @@ export default function Home() {
                   </div>
                   <p className="text-muted-foreground mb-8 pb-8 border-b border-border/50">For established businesses looking to expand their reach.</p>
                   
-                  <ul className="space-y-4 mb-8">
-                    {['Everything in Free, plus:', 'Priority listing in search', 'Analytics & visitor insights', 'Verified seller badge', 'Featured homepage placement'].map((feature, i) => (
+                  <ul className="space-y-4 mb-8 grow">
+                    {['Everything in Free, plus:', 'Lead Analytics Dashboard', 'Verified Resident Badge', 'Priority Listing Placement', 'Featured Homepage Slot', 'Unlimited Listings'].map((feature, i) => (
                       <li key={i} className="flex items-start">
-                        <CheckCircle2 className="w-5 h-5 text-muted-foreground mr-3 shrink-0 mt-0.5" />
-                        <span className="text-foreground">{feature}</span>
+                        <CheckCircle2 className={i === 0 ? "w-5 h-5 text-primary mr-3 shrink-0 mt-0.5" : "w-5 h-5 text-muted-foreground mr-3 shrink-0 mt-0.5"} />
+                        <span className={i === 0 ? "text-foreground font-semibold" : "text-foreground"}>{feature}</span>
                       </li>
                     ))}
                   </ul>
@@ -495,6 +537,70 @@ export default function Home() {
             </div>
           </div>
         </section>
+        
+        {/* Admin Dashboard Preview Section */}
+        <section className="py-24 bg-foreground text-background">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-5xl font-bold mb-4">Built for Society Admins too.</h2>
+              <p className="text-lg text-background/70 max-w-2xl mx-auto">Get a birds-eye view of all businesses in your society.</p>
+            </div>
+            
+            <div className="max-w-4xl mx-auto bg-background rounded-2xl shadow-2xl p-6 md:p-8 text-foreground">
+              <div className="flex items-center gap-2 mb-8">
+                <LayoutDashboard className="text-primary w-6 h-6" />
+                <h3 className="font-bold text-xl">Society Admin Panel - Sunshine Residency</h3>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div className="bg-muted p-4 rounded-xl border border-border/50">
+                  <p className="text-sm text-muted-foreground mb-1">Total Businesses</p>
+                  <p className="text-3xl font-bold text-primary">48</p>
+                </div>
+                <div className="bg-muted p-4 rounded-xl border border-border/50">
+                  <p className="text-sm text-muted-foreground mb-1">Active Sellers</p>
+                  <p className="text-3xl font-bold text-primary">31</p>
+                </div>
+                <div className="bg-muted p-4 rounded-xl border border-border/50">
+                  <p className="text-sm text-muted-foreground mb-1">Total Leads Generated</p>
+                  <p className="text-3xl font-bold text-primary">1,240</p>
+                </div>
+                <div className="bg-muted p-4 rounded-xl border border-border/50">
+                  <p className="text-sm text-muted-foreground mb-1">Top Category</p>
+                  <p className="text-xl font-bold text-primary mt-2">Food & Tiffin</p>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-bold text-lg mb-4">Top Performing Businesses</h4>
+                <div className="space-y-3">
+                  {[
+                    { name: "Priya's Home Tiffin", leads: 120, cat: "Food & Tiffin" },
+                    { name: "Sugar Oven Bakery", leads: 85, cat: "Bakery & Sweets" },
+                    { name: "Serenity Yoga", leads: 60, cat: "Fitness & Yoga" }
+                  ].map((biz, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-4 rounded-lg border border-border bg-card">
+                      <div className="flex items-center gap-4">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                          {idx + 1}
+                        </div>
+                        <div>
+                          <p className="font-bold">{biz.name}</p>
+                          <p className="text-xs text-muted-foreground">{biz.cat}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-primary">{biz.leads}</p>
+                        <p className="text-xs text-muted-foreground">leads</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
       </main>
 
       {/* Footer */}
@@ -518,10 +624,10 @@ export default function Home() {
             <div>
               <h4 className="font-bold text-lg mb-4">Platform</h4>
               <ul className="space-y-3">
-                <li><a href="#" className="text-background/70 hover:text-primary transition-colors">Browse Categories</a></li>
-                <li><a href="#" className="text-background/70 hover:text-primary transition-colors">List Your Business</a></li>
-                <li><a href="#" className="text-background/70 hover:text-primary transition-colors">Pricing</a></li>
-                <li><a href="#" className="text-background/70 hover:text-primary transition-colors">Success Stories</a></li>
+                <li><button onClick={() => scrollToSection("categories")} className="text-background/70 hover:text-primary transition-colors">Browse Categories</button></li>
+                <li><button onClick={() => setLocation("/sell")} className="text-background/70 hover:text-primary transition-colors">List Your Business</button></li>
+                <li><button onClick={() => scrollToSection("pricing")} className="text-background/70 hover:text-primary transition-colors">Pricing</button></li>
+                <li><button onClick={() => scrollToSection("home")} className="text-background/70 hover:text-primary transition-colors">Success Stories</button></li>
               </ul>
             </div>
             
