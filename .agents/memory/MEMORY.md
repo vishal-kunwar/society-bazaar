@@ -1,0 +1,1 @@
+- [Society Bazaar architecture](society-bazaar.md) — Indian apartment society marketplace; full-stack with Clerk auth, Drizzle ORM, Express API, approval workflow.
