@@ -28,7 +28,7 @@ router.get("/businesses", async (req: Request, res: Response) => {
       and(
         eq(businessesTable.status, approvedStatus as "approved" | "pending" | "rejected" | "paused"),
         societyId ? eq(businessesTable.societyId, Number(societyId)) : undefined,
-        category ? eq(businessesTable.category, category as string) : undefined,
+        category ? sql`${businessesTable.category} = ${category}` : undefined,
       ),
     )
     .groupBy(businessesTable.id, societiesTable.id)

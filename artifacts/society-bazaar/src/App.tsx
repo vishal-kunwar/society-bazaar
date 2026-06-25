@@ -12,6 +12,7 @@ import Sell from "@/pages/sell";
 import BusinessDetail from "@/pages/business-detail";
 import SellerDashboard from "@/pages/seller-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
+import Favourites from "@/pages/favourites";
 
 const queryClient = new QueryClient();
 
@@ -21,7 +22,6 @@ const clerkPubKey = publishableKeyFromHost(
 );
 
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
-
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 function stripBase(path: string): string {
@@ -30,9 +30,7 @@ function stripBase(path: string): string {
     : path;
 }
 
-if (!clerkPubKey) {
-  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY");
-}
+if (!clerkPubKey) throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY");
 
 const clerkAppearance = {
   theme: shadcn,
@@ -66,9 +64,7 @@ const clerkAppearance = {
     footerActionLink: "text-primary font-semibold",
     footerActionText: "text-muted-foreground",
     dividerText: "text-muted-foreground",
-    identityPreviewEditButton: "text-primary",
     formFieldSuccessText: "text-primary",
-    alertText: "text-foreground",
     logoBox: "mb-2",
     logoImage: "h-10 w-auto",
     socialButtonsBlockButton: "border border-border hover:bg-muted transition-colors",
@@ -78,7 +74,6 @@ const clerkAppearance = {
     dividerLine: "bg-border",
     alert: "border border-border bg-muted/30 rounded-lg",
     otpCodeFieldInput: "border border-input",
-    formFieldRow: "gap-2",
     main: "p-0",
   },
 };
@@ -145,14 +140,14 @@ function ClerkProviderWithRoutes() {
       localization={{
         signIn: {
           start: {
-            title: "Welcome back to Society Bazaar",
-            subtitle: "Sign in to discover or list home businesses",
+            title: "Welcome back to Hustly",
+            subtitle: "Sign in to discover or list your hustle",
           },
         },
         signUp: {
           start: {
-            title: "Join Society Bazaar",
-            subtitle: "Get discovered by residents in your society",
+            title: "Join Hustly",
+            subtitle: "Turn your side hustle into a trusted local business",
           },
         },
       }}
@@ -170,6 +165,7 @@ function ClerkProviderWithRoutes() {
             <Route path="/business/:id" component={BusinessDetail} />
             <Route path="/dashboard" component={() => <ProtectedRoute component={SellerDashboard} />} />
             <Route path="/admin" component={() => <ProtectedRoute component={AdminDashboard} />} />
+            <Route path="/favourites" component={() => <ProtectedRoute component={Favourites} />} />
             <Route component={NotFound} />
           </Switch>
           <Toaster />

@@ -1,0 +1,364 @@
+PROJECT REBRAND + PRODUCTION MVP COMPLETION
+
+Current Name:
+Society Bazaar
+
+New Brand:
+Hustly
+
+Domain:
+GetHustly.shop
+
+Tagline:
+Turn your side hustle into a trusted local business.
+
+IMPORTANT:
+Do not redesign the UI from scratch.
+Keep the current design.
+Focus on making the application production-ready, functional, and deployable.
+
+==================================================
+STEP 1 - FIX DEPLOYMENT
+
+The app currently builds successfully but fails to start during deployment.
+
+Tasks:
+
+* Open deployment logs
+* Identify exact runtime error
+* Fix startup failures
+* Fix missing environment variables
+* Fix Supabase issues
+* Fix broken imports
+* Fix route errors
+* Fix hydration issues
+* Fix database initialization issues
+* Fix production deployment configuration
+
+Republish automatically.
+
+==================================================
+STEP 2 - REBRAND ENTIRE APPLICATION
+
+Replace all references:
+
+Society Bazaar -> Hustly
+
+Update:
+
+* Website title
+* Logo
+* Navbar
+* Footer
+* Hero section
+* Seller dashboard
+* Admin dashboard
+* Metadata
+* SEO tags
+* Open Graph tags
+* Notifications
+* WhatsApp messages
+* Loading screens
+* Placeholder text
+
+New Hero Headline:
+
+Turn your side hustle into a trusted local business.
+
+New Hero Subheadline:
+
+Discover and support talented home businesses in your community.
+
+Primary CTA:
+
+Start Your Hustle
+
+Secondary CTA:
+
+Explore Local Businesses
+
+==================================================
+STEP 3 - SUPABASE BACKEND
+
+Create complete backend using Supabase.
+
+Implement:
+
+Authentication:
+
+* Buyer signup
+* Seller signup
+* Login
+* Logout
+* Password reset
+* Role-based access
+
+Roles:
+
+* Buyer
+* Seller
+* Admin
+
+Create all required tables:
+
+* users
+* societies
+* businesses
+* categories
+* reviews
+* leads
+* favourites
+* feed_posts
+* daily_deals
+* subscriptions
+* notifications
+
+Create:
+
+* relationships
+* indexes
+* RLS policies
+
+==================================================
+STEP 4 - SELLER SYSTEM
+
+Make “List Your Business” fully functional.
+
+Seller should be able to:
+
+* Sign up
+* Create business
+* Edit business
+* Upload photos
+* Add WhatsApp number
+* Add category
+* Add society
+* Add pricing
+* Pause listing
+* Reactivate listing
+
+Seller Dashboard:
+
+Show:
+
+* Profile Views
+* WhatsApp Clicks
+* Total Leads
+* Monthly Leads
+* Reviews
+* Average Rating
+* Repeat Customers
+
+==================================================
+STEP 5 - BUYER SYSTEM
+
+Buyer should be able to:
+
+* Search businesses
+* Filter by category
+* Filter by society
+* Save favourites
+* Leave reviews
+* Contact sellers
+* Repeat orders
+
+==================================================
+STEP 6 - WHATSAPP LEAD TRACKING
+
+Every WhatsApp click must:
+
+1. Create lead record
+2. Save timestamp
+3. Save business ID
+4. Save seller ID
+
+Use this message:
+
+Hi,
+I found your business on Hustly and would like to know more.
+
+After WhatsApp click:
+
+Show:
+
+Had a good experience?
+Leave a review.
+
+==================================================
+STEP 7 - ENGAGEMENT FEATURES
+
+Add retention systems.
+
+1. Society Feed
+
+Sellers can post:
+
+* New products
+* Daily menu
+* Offers
+* Announcements
+
+Feed appears on homepage.
+
+2. Daily Deals
+
+Sellers can create:
+
+* Limited-time deals
+* Countdown timer
+* Expiry date
+
+Auto-hide expired deals.
+
+3. Repeat Order
+
+Add Order Again button.
+
+Track repeat orders.
+
+4. Favourite Businesses
+
+Save favourites.
+
+Create My Favourites page.
+
+5. New In Your Area
+
+Show new businesses.
+
+Display New badge.
+
+6. Trending This Week
+
+Show:
+
+* Most viewed
+* Most contacted
+* Highest rated
+
+7. Seller Reminder
+
+Display:
+
+Post an update today to get more visibility.
+
+8. Lead Reminder
+
+Display:
+
+You received X leads from Hustly this month.
+
+Use real data.
+
+9. Review Reminder
+
+Prompt after WhatsApp click.
+
+10. Monthly Performance Report
+
+Show:
+
+* Leads
+* Views
+* WhatsApp clicks
+* Reviews
+* Repeat customers
+* Top post
+* Top deal
+
+==================================================
+STEP 8 - SUBSCRIPTION SYSTEM
+
+Implement:
+
+Founding Seller Offer:
+
+First 50 leads free
+OR
+First 3 months free
+
+Whichever comes first.
+
+Track:
+
+* Trial start date
+* Leads used
+* Trial remaining
+
+Dashboard should display:
+
+Leads Used: X / 50
+
+Days Used: X / 90
+
+Trial ends when:
+50 leads reached OR 90 days completed.
+
+After trial:
+
+₹199/month
+
+Create subscription architecture.
+
+Add Razorpay integration placeholders.
+
+Do not require real keys yet.
+
+==================================================
+STEP 9 - ADMIN DASHBOARD
+
+Admin should be able to:
+
+* Approve businesses
+* Reject businesses
+* Suspend businesses
+* View all users
+* View all sellers
+* View all leads
+* View analytics
+
+==================================================
+STEP 10 - QUALITY ASSURANCE
+
+After implementation:
+
+Test every page.
+
+Test:
+
+* Homepage
+* Seller signup
+* Buyer signup
+* Login
+* Business creation
+* Business edit
+* Reviews
+* Favourites
+* Feed posts
+* Daily deals
+* Lead tracking
+* Subscription tracking
+* Admin dashboard
+
+Fix all bugs.
+
+==================================================
+FINAL TASK
+
+Run the application.
+
+Verify production build.
+
+Publish successfully.
+
+Provide:
+
+1. Production URL
+2. Features completed
+3. Features requiring manual configuration
+4. Supabase setup instructions
+5. Environment variables required
+
+Do not stop at planning.
+
+Implement everything directly in the project and make the application production-ready.

@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48" fill="none">
-  <rect width="36" height="36" x="6" y="6" rx="8" fill="#2e7d5e"/>
-  <path d="M24 14c-4.4 0-8 3.6-8 8 0 5.5 8 16 8 16s8-10.5 8-16c0-4.4-3.6-8-8-8zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" fill="white"/>
-  <text x="52" y="32" font-family="Plus Jakarta Sans, sans-serif" font-size="20" font-weight="700" fill="#1a3a2f">Society<tspan fill="#2e7d5e">Bazaar</tspan></text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 44" fill="none">
+  <rect width="32" height="32" x="6" y="6" rx="8" fill="#2e7d5e"/>
+  <path d="M22 10c-5 0-9 4-9 9 0 6 9 15 9 15s9-9 9-15c0-5-4-9-9-9zm0 12a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" fill="white"/>
+  <text x="46" y="29" font-family="Plus Jakarta Sans, sans-serif" font-size="22" font-weight="800" fill="#1a3a2f">Hust<tspan fill="#2e7d5e">ly</tspan></text>
 </svg>

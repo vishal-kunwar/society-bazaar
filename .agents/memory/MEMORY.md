@@ -1,1 +1,3 @@
-- [Society Bazaar architecture](society-bazaar.md) — Indian apartment society marketplace; full-stack with Clerk auth, Drizzle ORM, Express API, approval workflow.
+- [Hustly rebrand](hustly-rebrand.md) — app rebranded from "Society Bazaar" to "Hustly"; all pages, brand text, hero, CTAs updated.
+- [DB lib stale declarations](db-lib-rebuild.md) — after adding tables to lib/db schema, run `pnpm run typecheck:libs` before API typecheck or TS2305 errors appear.
+- [Category enum filter](category-filter.md) — use sql template tag instead of eq() for pgEnum columns when passing plain string from query params.

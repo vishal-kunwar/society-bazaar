@@ -46,10 +46,7 @@ export default function Sell() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      businessName: "", ownerName: "", societyId: "", category: "",
-      phone: "", whatsapp: "", description: "",
-    },
+    defaultValues: { businessName: "", ownerName: "", societyId: "", category: "", phone: "", whatsapp: "", description: "" },
   });
 
   const createBusiness = useMutation({
@@ -63,17 +60,9 @@ export default function Sell() {
         whatsapp: values.whatsapp,
         description: values.description,
       }),
-    onSuccess: () => {
-      setIsSubmitted(true);
-    },
-    onError: (err: Error) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    },
+    onSuccess: () => setIsSubmitted(true),
+    onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
-
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    createBusiness.mutate(values);
-  }
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground selection:bg-primary/20 selection:text-primary">
@@ -83,52 +72,42 @@ export default function Sell() {
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <MapPin className="text-primary-foreground w-5 h-5" />
             </div>
-            <span className="font-bold text-xl tracking-tight text-foreground">
-              Society<span className="text-primary">Bazaar</span>
-            </span>
+            <span className="font-bold text-xl tracking-tight">Hust<span className="text-primary">ly</span></span>
           </div>
           <button onClick={() => setLocation("/")} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Home</button>
         </div>
       </nav>
 
       <main className="pb-24">
-        <section className="pt-16 pb-12 overflow-hidden bg-muted/30 border-b border-border/50">
+        <section className="pt-16 pb-12 bg-muted/30 border-b border-border/50">
           <div className="container mx-auto px-4 md:px-6 text-center">
             <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-foreground mb-4">
-              List Your Business on Society Bazaar
+              List Your Hustle
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Join 500+ home-based sellers. First 6 months completely free.
+              Join 500+ home-based sellers. First 50 leads completely free.
             </p>
           </div>
         </section>
 
         <section className="container mx-auto px-4 md:px-6 mt-12">
           <div className="max-w-2xl mx-auto">
-            <button
-              onClick={() => setLocation("/")}
-              className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-6"
-            >
+            <button onClick={() => setLocation("/")} className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-6">
               <ArrowLeft className="w-4 h-4 mr-2" /> Back to Home
             </button>
 
             {isSubmitted ? (
               <Card className="border-primary/20 shadow-lg p-12 text-center bg-primary/5">
-                <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: "spring" }}
-                  className="flex flex-col items-center"
-                >
+                <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring" }} className="flex flex-col items-center">
                   <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mb-6">
                     <CheckCircle2 className="w-10 h-10 text-primary" />
                   </div>
-                  <h2 className="text-2xl font-bold text-foreground mb-4">Your listing is submitted!</h2>
+                  <h2 className="text-2xl font-bold text-foreground mb-4">Your hustle is submitted!</h2>
                   <p className="text-muted-foreground mb-2">We'll review and publish it within 24 hours.</p>
-                  <p className="text-sm text-muted-foreground mb-8">You can track the status in your seller dashboard.</p>
+                  <p className="text-sm text-muted-foreground mb-8">Track the approval status in your dashboard.</p>
                   <div className="flex gap-3 flex-wrap justify-center">
-                    <Button size="lg" onClick={() => setLocation("/dashboard")} data-testid="button-go-dashboard">View Dashboard</Button>
-                    <Button size="lg" variant="outline" onClick={() => setLocation("/")} data-testid="button-back-home">Back to Home</Button>
+                    <Button size="lg" onClick={() => setLocation("/dashboard")}>View Dashboard</Button>
+                    <Button size="lg" variant="outline" onClick={() => setLocation("/")}>Back to Home</Button>
                   </div>
                 </motion.div>
               </Card>
@@ -136,139 +115,80 @@ export default function Sell() {
               <Card className="border-border/50 shadow-md">
                 <CardContent className="p-6 md:p-8">
                   <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <form onSubmit={form.handleSubmit((v) => createBusiness.mutate(v))} className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="businessName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Business Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g., Priya's Home Tiffin" {...field} data-testid="input-business-name" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="ownerName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Owner Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g., Priya Sharma" {...field} data-testid="input-owner-name" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="societyId"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Society Name</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger data-testid="select-society">
-                                    <SelectValue placeholder="Select a society" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {societies?.map(s => (
-                                    <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="category"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Category</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger data-testid="select-category">
-                                    <SelectValue placeholder="Select a category" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {CATEGORIES.map(c => (
-                                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="phone"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Phone Number</FormLabel>
-                              <FormControl>
-                                <Input type="tel" placeholder="10-digit mobile number" {...field} data-testid="input-phone" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="whatsapp"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>WhatsApp Number</FormLabel>
-                              <FormControl>
-                                <Input type="tel" placeholder="For customer inquiries" {...field} data-testid="input-whatsapp" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={form.control}
-                        name="description"
-                        render={({ field }) => (
+                        <FormField control={form.control} name="businessName" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Business Description</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Tell your neighbours about what you offer..."
-                                className="min-h-[120px] resize-none"
-                                {...field}
-                                data-testid="input-description"
-                              />
-                            </FormControl>
+                            <FormLabel>Business Name</FormLabel>
+                            <FormControl><Input placeholder="e.g., Priya's Home Tiffin" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
-                        )}
-                      />
-
-                      <Button
-                        type="submit"
-                        size="lg"
-                        className="w-full font-bold hover-elevate"
-                        disabled={createBusiness.isPending}
-                        data-testid="button-submit-listing"
-                      >
-                        {createBusiness.isPending ? "Submitting..." : "Submit Listing"}
+                        )} />
+                        <FormField control={form.control} name="ownerName" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Owner Name</FormLabel>
+                            <FormControl><Input placeholder="e.g., Priya Sharma" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField control={form.control} name="societyId" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Society / Area</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Select a society" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {societies?.map(s => <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="category" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Category</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField control={form.control} name="phone" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone Number</FormLabel>
+                            <FormControl><Input type="tel" placeholder="10-digit mobile number" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="whatsapp" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>WhatsApp Number</FormLabel>
+                            <FormControl><Input type="tel" placeholder="For customer inquiries" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      </div>
+                      <FormField control={form.control} name="description" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Business Description</FormLabel>
+                          <FormControl>
+                            <Textarea placeholder="Tell your neighbours about what you offer..." className="min-h-[120px] resize-none" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <Button type="submit" size="lg" className="w-full font-bold" disabled={createBusiness.isPending}>
+                        {createBusiness.isPending ? "Submitting..." : "Submit My Hustle"}
                       </Button>
                     </form>
                   </Form>
