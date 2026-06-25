@@ -70,10 +70,14 @@ router.get("/businesses/:id", async (req: Request, res: Response) => {
 
 router.post("/businesses", requireAuth, async (req: Request, res: Response) => {
   const { userId } = req as AuthedRequest;
-  const { businessName, ownerName, societyId, category, phone, whatsapp, description } = req.body;
+  const {
+    businessName, ownerName, societyId, category, phone, whatsapp, description,
+    email, yearsInBusiness, tower, flatNumber, city, alternatePhone,
+    instagram, website, priceRange, servicesOffered, imageUrl, coverImageUrl,
+  } = req.body;
 
   if (!businessName || !ownerName || !societyId || !category || !phone || !whatsapp || !description) {
-    res.status(400).json({ error: "All fields are required" });
+    res.status(400).json({ error: "Required fields missing" });
     return;
   }
 
@@ -88,7 +92,19 @@ router.post("/businesses", requireAuth, async (req: Request, res: Response) => {
       phone,
       whatsapp,
       description,
+      imageUrl: imageUrl || "",
       status: "pending",
+      email: email || null,
+      yearsInBusiness: yearsInBusiness ? Number(yearsInBusiness) : null,
+      tower: tower || null,
+      flatNumber: flatNumber || null,
+      city: city || null,
+      alternatePhone: alternatePhone || null,
+      instagram: instagram || null,
+      website: website || null,
+      priceRange: priceRange || null,
+      servicesOffered: servicesOffered || null,
+      coverImageUrl: coverImageUrl || null,
     })
     .returning();
 

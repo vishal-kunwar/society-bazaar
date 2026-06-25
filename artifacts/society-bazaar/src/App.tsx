@@ -113,15 +113,20 @@ function ClerkQueryClientCacheInvalidator() {
   return null;
 }
 
-function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+function RedirectToSignIn() {
   const [, setLocation] = useLocation();
+  useEffect(() => { setLocation("/sign-in"); }, [setLocation]);
+  return null;
+}
+
+function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   return (
     <>
       <Show when="signed-in">
         <Component />
       </Show>
       <Show when="signed-out">
-        {(() => { setLocation("/sign-in"); return null; })()}
+        <RedirectToSignIn />
       </Show>
     </>
   );
