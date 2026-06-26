@@ -2,10 +2,27 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { businessesTable, societiesTable, leadsTable, reviewsTable } from "@workspace/db";
 import { eq, desc, sql, count } from "drizzle-orm";
-import { requireAdmin } from "../middlewares/requireAuth";
+import { requireAdmin, isClerkEnabled, ADMIN_USER_IDS } from "../middlewares/requireAuth";
+import { getAuth } from "@clerk/express";
 import type { Request, Response } from "express";
 
 const router = Router();
+
+router.get("/admin/check", async (req: Request, res: Response) => {
+  if (!isClerkEnabled) {
+    res.json({ isAdmin: true });
+    return;
+  }
+  const auth = getAuth(req);
+  const userId = auth?.userId;
+  if (!userId) {
+    res.json({ isAdmin: false });
+    return;
+  }
+  const isAdmin = ADMIN_USER_IDS.includes(userId);
+  res.json({ isAdmin });
+});
+
 
 router.get("/admin/stats", requireAdmin, async (_req: Request, res: Response) => {
   const [totals] = await db

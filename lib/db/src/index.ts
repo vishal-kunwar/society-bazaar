@@ -1,6 +1,17 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import * as schema from "./schema";
+import { loadEnvFile } from "process";
+import path from "path";
+
+// Try loading environment variables from .env file
+try {
+  loadEnvFile(path.resolve(process.cwd(), ".env"));
+} catch (e) {
+  try {
+    loadEnvFile(path.resolve(process.cwd(), "../../.env"));
+  } catch (e2) {}
+}
 
 const { Pool } = pg;
 

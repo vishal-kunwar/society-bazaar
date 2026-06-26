@@ -3,6 +3,7 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import { clerkMiddleware } from "@clerk/express";
 import { publishableKeyFromHost } from "@clerk/shared/keys";
+import path from "path";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import {
@@ -39,15 +40,39 @@ app.use(cors({ credentials: true, origin: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(
-  clerkMiddleware((req) => ({
-    publishableKey: publishableKeyFromHost(
-      getClerkProxyHost(req) ?? "",
-      process.env.CLERK_PUBLISHABLE_KEY,
-    ),
-  })),
-);
+const isClerkEnabled = process.env.CLERK_SECRET_KEY &&
+  process.env.CLERK_SECRET_KEY !== "[YOUR-CLERK-SECRET-KEY]" &&
+  process.env.CLERK_SECRET_KEY.trim() !== "";
+
+if (isClerkEnabled) {
+  app.use(
+    clerkMiddleware((req) => ({
+      publishableKey: publishableKeyFromHost(
+        getClerkProxyHost(req) ?? "",
+        process.env.CLERK_PUBLISHABLE_KEY,
+      ),
+    })),
+  );
+} else {
+  logger.warn("Clerk Secret Key is missing or placeholder. Running in mock/bypass auth mode with user 'mock_user_id'.");
+  app.use((req: any, _res, next) => {
+    req.auth = { userId: "mock_user_id" };
+    next();
+  });
+}
+
+// Serve uploaded files statically under /api/uploads
+app.use("/api/uploads", express.static(path.resolve(process.cwd(), "uploads")));
 
 app.use("/api", router);
+
+// Global error handler middleware
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  logger.error({ err }, "Application error");
+  const statusCode = err.status || err.statusCode || 500;
+  res.status(statusCode).json({
+    error: err.message || "Internal Server Error",
+  });
+});
 
 export default app;

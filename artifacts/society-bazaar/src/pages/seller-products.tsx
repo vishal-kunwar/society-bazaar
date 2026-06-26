@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { api, type Product } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { ImageUpload } from "@/components/image-upload";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -312,16 +313,13 @@ export default function SellerProducts() {
               </div>
             </div>
             <div>
-              <Label>Image URL</Label>
-              <Input type="url" value={form.image} onChange={e => setForm(f => ({ ...f, image: e.target.value }))} placeholder="https://i.imgur.com/photo.jpg" />
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Upload to Imgur or ImgBB, then paste the link — same as business listing images.
-              </p>
-              {form.image && (
-                <div className="mt-2 h-24 rounded-lg overflow-hidden border border-border">
-                  <img src={form.image} alt="Preview" className="w-full h-full object-cover" onError={e => (e.currentTarget.style.display = "none")} />
-                </div>
-              )}
+              <Label>Image</Label>
+              <ImageUpload
+                value={form.image}
+                onChange={(url) => setForm(f => ({ ...f, image: url }))}
+                label="Upload Product Image"
+                variant="wide"
+              />
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

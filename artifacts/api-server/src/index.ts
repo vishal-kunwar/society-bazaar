@@ -1,3 +1,15 @@
+import { loadEnvFile } from "process";
+import path from "path";
+
+// Try loading environment variables from .env file
+try {
+  loadEnvFile(path.resolve(process.cwd(), ".env"));
+} catch (e) {
+  try {
+    loadEnvFile(path.resolve(process.cwd(), "../../.env"));
+  } catch (e2) {}
+}
+
 import app from "./app";
 import { logger } from "./lib/logger";
 

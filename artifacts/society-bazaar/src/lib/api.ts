@@ -36,6 +36,18 @@ export interface Business {
   status: "pending" | "approved" | "rejected" | "paused";
   createdAt: string;
   updatedAt: string;
+  // Extended optional fields
+  email?: string | null;
+  yearsInBusiness?: number | null;
+  tower?: string | null;
+  flatNumber?: string | null;
+  city?: string | null;
+  alternatePhone?: string | null;
+  instagram?: string | null;
+  website?: string | null;
+  priceRange?: string | null;
+  servicesOffered?: string | null;
+  coverImageUrl?: string | null;
 }
 
 export interface BusinessRow {
@@ -153,6 +165,7 @@ export const api = {
     update: (id: number, data: Record<string, unknown>) =>
       request<Business>(`/businesses/${id}`, { method: "PUT", body: JSON.stringify(data) }),
     mine: () => request<BusinessRow[]>("/my-businesses"),
+    getOwn: (id: number) => request<{ business: Business; society: Society | null }>(`/my-businesses/${id}`),
     pause: (id: number) =>
       request<Business>(`/businesses/${id}/pause`, { method: "PATCH" }),
     unpause: (id: number) =>
@@ -189,6 +202,7 @@ export const api = {
     seller: () => request<SellerAnalytics>("/analytics/seller"),
   },
   admin: {
+    check: () => request<{ isAdmin: boolean }>("/admin/check"),
     stats: () => request<AdminStats>("/admin/stats"),
     businesses: (status?: string) => {
       const qs = status ? `?status=${status}` : "";

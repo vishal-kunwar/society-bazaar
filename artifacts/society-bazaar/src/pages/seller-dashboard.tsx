@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import {
   MapPin, Star, TrendingUp, MessageCircle, Plus, Clock,
   CheckCircle2, XCircle, LogOut, Flame, Heart, Bell, Zap,
-  RefreshCw, PauseCircle, PlayCircle, Megaphone, Tag, Package,
+  RefreshCw, PauseCircle, PlayCircle, Megaphone, Tag, Package, Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -416,7 +416,10 @@ export default function SellerDashboard() {
                           </p>
                         )}
                       </div>
-                      <div className="flex gap-2 shrink-0">
+                      <div className="flex gap-2 shrink-0 flex-wrap">
+                        <Button size="sm" variant="outline" onClick={() => setLocation(`/sell/edit/${biz.id}`)}>
+                          <Pencil className="w-4 h-4 mr-1" />Edit
+                        </Button>
                         <Button size="sm" variant="outline" onClick={() => setLocation(`/dashboard/products/${biz.id}`)}>
                           <Package className="w-4 h-4 mr-1" />Products
                         </Button>
@@ -430,9 +433,11 @@ export default function SellerDashboard() {
                             <PlayCircle className="w-4 h-4 mr-1" />Reactivate
                           </Button>
                         )}
-                        <Button size="sm" variant="outline" onClick={() => setLocation(`/business/${biz.id}`)}>
-                          View
-                        </Button>
+                        {biz.status === "approved" && (
+                          <Button size="sm" variant="outline" onClick={() => setLocation(`/business/${biz.id}`)}>
+                            View
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </CardContent>

@@ -2,9 +2,10 @@ import { useEffect, useRef } from "react";
 import { ClerkProvider, SignIn, SignUp, Show, useClerk } from "@clerk/react";
 import { shadcn } from "@clerk/themes";
 import { Switch, Route, useLocation, Router as WouterRouter } from "wouter";
-import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { api } from "@/lib/api";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Sell from "@/pages/sell";
@@ -13,6 +14,8 @@ import SellerDashboard from "@/pages/seller-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
 import Favourites from "@/pages/favourites";
 import SellerProducts from "@/pages/seller-products";
+import SellEdit from "@/pages/sell-edit";
+import SellerLanding from "@/pages/seller-landing";
 
 const queryClient = new QueryClient();
 
@@ -76,7 +79,12 @@ const clerkAppearance = {
 function SignInPage() {
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4 py-8">
-      <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} />
+      <SignIn
+        routing="path"
+        path={`${basePath}/sign-in`}
+        signUpUrl={`${basePath}/sign-up`}
+        fallbackRedirectUrl={`${basePath}/dashboard`}
+      />
     </div>
   );
 }
@@ -84,7 +92,12 @@ function SignInPage() {
 function SignUpPage() {
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4 py-8">
-      <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} />
+      <SignUp
+        routing="path"
+        path={`${basePath}/sign-up`}
+        signInUrl={`${basePath}/sign-in`}
+        fallbackRedirectUrl={`${basePath}/dashboard`}
+      />
     </div>
   );
 }
@@ -114,6 +127,39 @@ function RedirectToSignIn() {
   return null;
 }
 
+function RedirectToHome() {
+  const [, setLocation] = useLocation();
+  useEffect(() => { setLocation("/"); }, [setLocation]);
+  return null;
+}
+
+function AdminProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-check"],
+    queryFn: () => api.admin.check(),
+    retry: false,
+  });
+
+  return (
+    <>
+      <Show when="signed-in">
+        {isLoading ? (
+          <div className="flex min-h-screen items-center justify-center bg-background">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : data?.isAdmin ? (
+          <Component />
+        ) : (
+          <RedirectToHome />
+        )}
+      </Show>
+      <Show when="signed-out">
+        <RedirectToSignIn />
+      </Show>
+    </>
+  );
+}
+
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   return (
     <>
@@ -141,13 +187,13 @@ function ClerkProviderWithRoutes() {
         signIn: {
           start: {
             title: "Welcome back to Hustly",
-            subtitle: "Sign in to discover or list your hustle",
+            subtitle: "Sign in to manage your listings",
           },
         },
         signUp: {
           start: {
             title: "Join Hustly",
-            subtitle: "Turn your side hustle into a trusted local business",
+            subtitle: "Start getting WhatsApp leads from your neighbours",
           },
         },
       }}
@@ -161,11 +207,13 @@ function ClerkProviderWithRoutes() {
             <Route path="/" component={Home} />
             <Route path="/sign-in/*?" component={SignInPage} />
             <Route path="/sign-up/*?" component={SignUpPage} />
+            <Route path="/seller-landing" component={SellerLanding} />
             <Route path="/sell" component={() => <ProtectedRoute component={Sell} />} />
+            <Route path="/sell/edit/:id" component={() => <ProtectedRoute component={SellEdit} />} />
             <Route path="/business/:id" component={BusinessDetail} />
             <Route path="/dashboard/products/:businessId" component={() => <ProtectedRoute component={SellerProducts} />} />
             <Route path="/dashboard" component={() => <ProtectedRoute component={SellerDashboard} />} />
-            <Route path="/admin" component={() => <ProtectedRoute component={AdminDashboard} />} />
+            <Route path="/admin" component={() => <AdminProtectedRoute component={AdminDashboard} />} />
             <Route path="/favourites" component={() => <ProtectedRoute component={Favourites} />} />
             <Route component={NotFound} />
           </Switch>

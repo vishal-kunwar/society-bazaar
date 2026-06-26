@@ -113,7 +113,11 @@ router.post("/businesses", requireAuth, async (req: Request, res: Response) => {
 router.put("/businesses/:id", requireAuth, async (req: Request, res: Response) => {
   const { userId } = req as AuthedRequest;
   const id = Number(req.params.id);
-  const { businessName, ownerName, societyId, category, phone, whatsapp, description } = req.body;
+  const {
+    businessName, ownerName, societyId, category, phone, whatsapp, description,
+    email, yearsInBusiness, tower, flatNumber, city, alternatePhone,
+    instagram, website, priceRange, servicesOffered, imageUrl, coverImageUrl,
+  } = req.body;
 
   const [existing] = await db
     .select()
@@ -126,9 +130,33 @@ router.put("/businesses/:id", requireAuth, async (req: Request, res: Response) =
     return;
   }
 
+  // If the listing was approved, reset to pending so admin can re-review changes
+  const newStatus = existing.status === "approved" ? "pending" : existing.status;
+
   const [updated] = await db
     .update(businessesTable)
-    .set({ businessName, ownerName, societyId: Number(societyId), category, phone, whatsapp, description })
+    .set({
+      businessName,
+      ownerName,
+      societyId: Number(societyId),
+      category,
+      phone,
+      whatsapp,
+      description,
+      status: newStatus,
+      email: email || null,
+      yearsInBusiness: yearsInBusiness ? Number(yearsInBusiness) : null,
+      tower: tower || null,
+      flatNumber: flatNumber || null,
+      city: city || null,
+      alternatePhone: alternatePhone || null,
+      instagram: instagram || null,
+      website: website || null,
+      priceRange: priceRange || null,
+      servicesOffered: servicesOffered || null,
+      imageUrl: imageUrl || existing.imageUrl,
+      coverImageUrl: coverImageUrl || null,
+    })
     .where(eq(businessesTable.id, id))
     .returning();
 
@@ -193,6 +221,26 @@ router.get("/my-businesses", requireAuth, async (req: Request, res: Response) =>
     .groupBy(businessesTable.id, societiesTable.id)
     .orderBy(desc(businessesTable.createdAt));
   res.json(rows);
+});
+
+router.get("/my-businesses/:id", requireAuth, async (req: Request, res: Response) => {
+  const { userId } = req as AuthedRequest;
+  const id = Number(req.params.id);
+  const rows = await db
+    .select({
+      business: businessesTable,
+      society: societiesTable,
+    })
+    .from(businessesTable)
+    .leftJoin(societiesTable, eq(businessesTable.societyId, societiesTable.id))
+    .where(and(eq(businessesTable.id, id), eq(businessesTable.clerkUserId, userId)))
+    .limit(1);
+
+  if (!rows.length) {
+    res.status(404).json({ error: "Business not found or not authorized" });
+    return;
+  }
+  res.json(rows[0]);
 });
 
 export default router;

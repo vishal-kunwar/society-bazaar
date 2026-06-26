@@ -3,8 +3,7 @@ import { motion } from "framer-motion";
 import {
   Menu, X, Search, MapPin, Utensils, Cake, BookOpen, Dumbbell,
   Scissors, Sparkles, Wrench, MoreHorizontal, Star, MessageCircle,
-  TrendingUp, CheckCircle2, ShieldCheck, Heart, Flame, Clock,
-  LayoutDashboard, Users, Zap, ChevronRight, Bell,
+  TrendingUp, Heart, Flame, Clock, Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,11 +13,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLocation } from "wouter";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Show, useClerk, useUser, UserButton } from "@clerk/react";
+import { useQuery } from "@tanstack/react-query";
 import { api, type BusinessRow, type DealRow, type FeedPostRow } from "@/lib/api";
 
-const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const CATEGORY_IMAGES: Record<string, string> = {
   "Food & Tiffin": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80",
@@ -149,9 +146,6 @@ function BusinessCard({ row, isFav, onToggleFav, favPending, onWhatsApp, onClick
 
 export default function Home() {
   const [, setLocation] = useLocation();
-  const { signOut, openSignIn } = useClerk();
-  const { user } = useUser();
-  const qc = useQueryClient();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedSociety, setSelectedSociety] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -169,19 +163,6 @@ export default function Home() {
   const { data: feed } = useQuery({
     queryKey: ["feed", selectedSociety],
     queryFn: () => api.feed.list(selectedSociety !== "all" ? Number(selectedSociety) : undefined),
-  });
-  const { data: favIds } = useQuery({
-    queryKey: ["favourite-ids"],
-    queryFn: () => api.favourites.ids(),
-    enabled: !!user,
-  });
-
-  const toggleFav = useMutation({
-    mutationFn: (id: number) => api.favourites.toggle(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["favourite-ids"] });
-      qc.invalidateQueries({ queryKey: ["favourites"] });
-    },
   });
 
   const handleWhatsApp = useCallback((businessId: number, whatsapp: string) => {
@@ -207,7 +188,8 @@ export default function Home() {
       {/* Navbar */}
       <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/90 backdrop-blur-md">
         <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          {/* Logo */}
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setLocation("/")}>
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <MapPin className="text-primary-foreground w-5 h-5" />
             </div>
@@ -215,33 +197,29 @@ export default function Home() {
           </div>
 
           {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-2">
-            <Show when="signed-in">
-              <Button variant="ghost" size="sm" onClick={() => setLocation("/favourites")}>
-                <Heart className="w-4 h-4 mr-1 text-red-400" />Favourites
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setLocation("/dashboard")}>
-                <LayoutDashboard className="w-4 h-4 mr-1" />Dashboard
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setLocation("/sell")}>
-                List Your Business
-              </Button>
-              <div className="flex items-center gap-2 border-l border-border/40 pl-2 ml-2">
-                <Button variant="outline" size="sm" onClick={() => signOut({ redirectUrl: basePath || "/" })}>
-                  Sign Out
-                </Button>
-                <div className="h-8 w-8 flex items-center justify-center">
-                  <UserButton />
-                </div>
-              </div>
-            </Show>
-            <Show when="signed-out">
-              <Button variant="ghost" size="sm" onClick={() => setLocation("/sign-in")}>Sign In</Button>
-              <Button variant="outline" size="sm" onClick={() => setLocation("/sign-up")}>Sign Up</Button>
-              <Button variant="outline" size="sm" onClick={() => setLocation("/sell")}>
-                List Your Business
-              </Button>
-            </Show>
+          <div className="hidden md:flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => document.getElementById("explore")?.scrollIntoView({ behavior: "smooth" })}
+            >
+              Explore
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocation("/seller-landing")}
+            >
+              List Your Business
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-2"
+              onClick={() => setLocation("/sign-in")}
+            >
+              Seller Login
+            </Button>
           </div>
 
           {/* Mobile hamburger */}
@@ -250,27 +228,37 @@ export default function Home() {
           </button>
         </div>
 
+        {/* Mobile menu */}
         {mobileMenuOpen && (
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="md:hidden border-t border-border/40 bg-background px-4 pb-4 pt-2 flex flex-col gap-2">
-            <Show when="signed-in">
-              <Button variant="ghost" size="sm" className="justify-start" onClick={() => { setLocation("/favourites"); setMobileMenuOpen(false); }}>
-                <Heart className="w-4 h-4 mr-2 text-red-400" />Favourites
-              </Button>
-              <Button variant="ghost" size="sm" className="justify-start" onClick={() => { setLocation("/dashboard"); setMobileMenuOpen(false); }}>
-                <LayoutDashboard className="w-4 h-4 mr-2" />Dashboard
-              </Button>
-              <Button variant="ghost" size="sm" className="justify-start" onClick={() => { setLocation("/sell"); setMobileMenuOpen(false); }}>
-                List Your Business
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => signOut({ redirectUrl: basePath || "/" })}>Sign Out</Button>
-            </Show>
-            <Show when="signed-out">
-              <Button variant="ghost" size="sm" className="justify-start" onClick={() => { setLocation("/sign-in"); setMobileMenuOpen(false); }}>Sign In</Button>
-              <Button variant="outline" size="sm" className="justify-start" onClick={() => { setLocation("/sign-up"); setMobileMenuOpen(false); }}>Sign Up</Button>
-              <Button variant="ghost" size="sm" className="justify-start" onClick={() => { setLocation("/sell"); setMobileMenuOpen(false); }}>
-                List Your Business
-              </Button>
-            </Show>
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="md:hidden border-t border-border/40 bg-background px-4 pb-4 pt-2 flex flex-col gap-2"
+          >
+            <Button
+              variant="ghost"
+              size="sm"
+              className="justify-start"
+              onClick={() => { document.getElementById("explore")?.scrollIntoView({ behavior: "smooth" }); setMobileMenuOpen(false); }}
+            >
+              Explore
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="justify-start"
+              onClick={() => { setLocation("/seller-landing"); setMobileMenuOpen(false); }}
+            >
+              List Your Business
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="justify-start"
+              onClick={() => { setLocation("/sign-in"); setMobileMenuOpen(false); }}
+            >
+              Seller Login
+            </Button>
           </motion.div>
         )}
       </nav>
@@ -281,15 +269,14 @@ export default function Home() {
         <div className="container mx-auto px-4 md:px-6 text-center relative">
           <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <div className="inline-flex items-center gap-2 bg-primary/10 text-primary text-xs font-semibold px-4 py-1.5 rounded-full mb-6 border border-primary/20">
-              <Flame className="w-3.5 h-3.5" />500+ home hustles listed · First 50 leads free
+              <Flame className="w-3.5 h-3.5" />500+ home hustles listed · Connect directly on WhatsApp
             </div>
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-foreground leading-tight mb-5">
-              Discover trusted home businesses<br />
-              <span className="text-primary">right in your society.</span>
+              Discover trusted local businesses<br />
+              <span className="text-primary">in your society.</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-              Support talented home chefs, bakers, tutors, and more in your community.
-              <br className="hidden md:block" />Tiffin, bakeries, tutors, yoga, tailors and more — right in your society.
+              Find home chefs, tutors, bakers, tailors and more around you.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
@@ -303,11 +290,12 @@ export default function Home() {
                 size="lg"
                 variant="outline"
                 className="font-bold text-base px-8 h-13"
-                onClick={() => setLocation("/sell")}
+                onClick={() => setLocation("/seller-landing")}
               >
                 List Your Business
               </Button>
             </div>
+            <p className="mt-5 text-sm text-muted-foreground">No sign-up required to explore businesses.</p>
           </motion.div>
         </div>
       </section>
@@ -392,8 +380,7 @@ export default function Home() {
                 <Search className="w-7 h-7 text-muted-foreground" />
               </div>
               <h3 className="font-semibold text-foreground mb-2">No businesses found</h3>
-              <p className="text-muted-foreground text-sm mb-6">Try adjusting your filters or be the first to list here!</p>
-              <Button onClick={() => setLocation("/sell")}>List Your Business</Button>
+              <p className="text-muted-foreground text-sm mb-6">Try adjusting your filters to find home businesses in your community.</p>
             </div>
           )}
 
@@ -403,12 +390,12 @@ export default function Home() {
                 <motion.div key={row.business.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.04 }}>
                   <BusinessCard
                     row={row}
-                    isFav={favIds?.includes(row.business.id) ?? false}
-                    onToggleFav={(id) => user ? toggleFav.mutate(id) : setLocation("/sign-in")}
-                    favPending={toggleFav.isPending}
+                    isFav={false}
+                    onToggleFav={() => {}}
+                    favPending={false}
                     onWhatsApp={handleWhatsApp}
                     onClick={(id) => setLocation(`/business/${id}`)}
-                    showFavButton={true}
+                    showFavButton={false}
                   />
                 </motion.div>
               ))}
@@ -481,12 +468,12 @@ export default function Home() {
                 <motion.div key={row.business.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.07 }}>
                   <BusinessCard
                     row={row}
-                    isFav={favIds?.includes(row.business.id) ?? false}
-                    onToggleFav={(id) => user ? toggleFav.mutate(id) : setLocation("/sign-in")}
-                    favPending={toggleFav.isPending}
+                    isFav={false}
+                    onToggleFav={() => {}}
+                    favPending={false}
                     onWhatsApp={handleWhatsApp}
                     onClick={(id) => setLocation(`/business/${id}`)}
-                    showFavButton={!!user}
+                    showFavButton={false}
                   />
                 </motion.div>
               ))}
@@ -540,149 +527,6 @@ export default function Home() {
         </section>
       )}
 
-      {/* ── For Sellers ── */}
-      <section className="py-20 bg-primary text-primary-foreground" id="for-sellers">
-        <div className="container mx-auto px-4 md:px-6 text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <h2 className="text-3xl md:text-4xl font-extrabold mb-4">For Sellers: Grow Your Home Business</h2>
-            <p className="text-primary-foreground/80 text-lg mb-8 max-w-xl mx-auto">
-              Join hundreds of sellers earning from home. First 50 leads completely free.
-            </p>
-            <div className="flex gap-4 justify-center flex-wrap">
-              <Button
-                size="lg"
-                variant="secondary"
-                className="font-bold text-base px-8"
-                onClick={() => setLocation("/sell")}
-              >
-                List Your Business — It's Free
-              </Button>
-              <Show when="signed-in">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="font-bold text-base px-8 border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10"
-                  onClick={() => setLocation("/dashboard")}
-                >
-                  <LayoutDashboard className="w-5 h-5 mr-2" />View Dashboard
-                </Button>
-              </Show>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── Why Hustly ── */}
-      <section className="py-20 bg-muted/20">
-        <div className="container mx-auto px-4 md:px-6">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-14">Why sellers love Hustly</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { icon: Zap, title: "Live in Minutes", body: "List your business and start getting WhatsApp leads the same day. No setup fees, no tech skills needed." },
-              { icon: Users, title: "Hyper-Local Reach", body: "Your listing appears to people in your own society and neighbourhood — buyers who are just steps away." },
-              { icon: ShieldCheck, title: "Free to Start", body: "First 50 leads are completely free. After that, just ₹199/month — less than a meal out." },
-            ].map((item, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-                <Card className="border-border/40 h-full">
-                  <CardContent className="p-7">
-                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
-                      <item.icon className="w-6 h-6 text-primary" />
-                    </div>
-                    <h3 className="font-bold text-lg mb-2">{item.title}</h3>
-                    <p className="text-muted-foreground leading-relaxed">{item.body}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Pricing ── */}
-      <section className="py-20 border-t border-border/30">
-        <div className="container mx-auto px-4 md:px-6 max-w-4xl">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-4">Simple, honest pricing</h2>
-          <p className="text-center text-muted-foreground mb-12">Start free. Scale with your hustle.</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="border-2 border-primary/30 bg-primary/5 shadow-lg">
-              <CardContent className="p-8">
-                <div className="inline-block bg-primary/20 text-primary text-xs font-bold px-3 py-1 rounded-full mb-4">Founding Seller</div>
-                <div className="text-4xl font-extrabold mb-1">₹0</div>
-                <p className="text-sm text-muted-foreground mb-6">First 50 leads OR 90 days, whichever comes first</p>
-                <ul className="space-y-2.5 mb-8">
-                  {["50 free WhatsApp leads", "90-day free trial", "Business listing page", "Society Feed posts", "Daily Deals", "Review collection"].map(f => (
-                    <li key={f} className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />{f}
-                    </li>
-                  ))}
-                </ul>
-                <Button className="w-full font-bold" onClick={() => setLocation("/sell")}>
-                  <Zap className="w-4 h-4 mr-2" />Start Free
-                </Button>
-              </CardContent>
-            </Card>
-            <Card className="border-border/50">
-              <CardContent className="p-8">
-                <div className="inline-block bg-muted text-muted-foreground text-xs font-bold px-3 py-1 rounded-full mb-4">After Trial</div>
-                <div className="text-4xl font-extrabold mb-1">₹199<span className="text-lg font-normal text-muted-foreground">/mo</span></div>
-                <p className="text-sm text-muted-foreground mb-6">Unlimited leads for one low monthly price</p>
-                <ul className="space-y-2.5 mb-8">
-                  {["Unlimited WhatsApp leads", "Priority listing", "Analytics dashboard", "All Free features", "Cancel anytime"].map(f => (
-                    <li key={f} className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />{f}
-                    </li>
-                  ))}
-                </ul>
-                <Button variant="outline" className="w-full font-bold">Coming Soon</Button>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Testimonials ── */}
-      <section className="py-20 bg-muted/20 border-t border-border/30">
-        <div className="container mx-auto px-4 md:px-6">
-          <h2 className="text-3xl font-extrabold text-center mb-12">What sellers say</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { name: "Priya Sharma", cat: "Tiffin Service", body: "Got my first 5 customers within a week of listing. Hustly is a game-changer for home chefs!", city: "Mumbai" },
-              { name: "Meena Patel", cat: "Bakery & Sweets", body: "I was scared nobody would find me. Now I get WhatsApp orders every single day from my neighbours.", city: "Pune" },
-              { name: "Rohan Gupta", cat: "Tuition Classes", body: "The free trial is genuinely free — no hidden catches. My classes are full and I haven't paid a rupee yet.", city: "Bangalore" },
-            ].map((t, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-                <Card className="border-border/40 h-full">
-                  <CardContent className="p-6">
-                    <div className="flex mb-3">
-                      {[1,2,3,4,5].map(s => <Star key={s} className="w-4 h-4 text-yellow-500 fill-yellow-500" />)}
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed mb-4">"{t.body}"</p>
-                    <div>
-                      <p className="font-semibold text-sm">{t.name}</p>
-                      <p className="text-xs text-muted-foreground">{t.cat} · {t.city}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Admin CTA (show to admins) ── */}
-      <section className="py-10 bg-muted/30 border-t border-border/30">
-        <div className="container mx-auto px-4 md:px-6 text-center">
-          <Show when="signed-in">
-            <button
-              onClick={() => setLocation("/admin")}
-              className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />Admin Dashboard
-            </button>
-          </Show>
-        </div>
-      </section>
-
       {/* ── Footer ── */}
       <footer className="border-t border-border/40 bg-background py-12">
         <div className="container mx-auto px-4 md:px-6">
@@ -694,10 +538,10 @@ export default function Home() {
               <span className="font-extrabold text-xl">Hust<span className="text-primary">ly</span></span>
             </div>
             <p className="text-sm text-muted-foreground text-center">
-              Turn your side hustle into a trusted local business. · <a href="https://GetHustly.shop" className="text-primary hover:underline">GetHustly.shop</a>
+              Discover and support talented home chefs, bakers, and local services in your community.
             </p>
             <div className="flex gap-6 text-sm text-muted-foreground">
-              <button onClick={() => setLocation("/sell")} className="hover:text-foreground transition-colors">List Your Business</button>
+              <button onClick={() => setLocation("/seller-landing")} className="hover:text-foreground transition-colors">List Your Business</button>
               <button onClick={() => setLocation("/sign-in")} className="hover:text-foreground transition-colors">Sign In</button>
             </div>
           </div>
