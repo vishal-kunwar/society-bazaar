@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useClerk } from "@clerk/react";
+import { useClerk, UserButton } from "@clerk/react";
 import { motion } from "framer-motion";
 import { MapPin, CheckCircle2, XCircle, Clock, TrendingUp, Building2, Users, LogOut, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -67,9 +67,14 @@ export default function AdminDashboard() {
             <Badge className="bg-primary/10 text-primary border-primary/20 font-semibold">
               <ShieldCheck className="w-3.5 h-3.5 mr-1" />Admin
             </Badge>
-            <Button variant="outline" size="sm" onClick={() => signOut({ redirectUrl: basePath || "/" })}>
-              <LogOut className="w-4 h-4 mr-2" />Sign Out
-            </Button>
+            <div className="flex items-center gap-2 border-l border-border/40 pl-2 ml-1">
+              <Button variant="outline" size="sm" onClick={() => signOut({ redirectUrl: basePath || "/" })}>
+                <LogOut className="w-4 h-4 mr-2" />Sign Out
+              </Button>
+              <div className="h-8 w-8 flex items-center justify-center">
+                <UserButton />
+              </div>
+            </div>
           </div>
         </div>
       </nav>

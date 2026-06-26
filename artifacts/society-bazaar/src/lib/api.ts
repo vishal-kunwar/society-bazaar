@@ -10,6 +10,9 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     const body = await res.json().catch(() => ({}));
     throw new Error((body as { error?: string }).error ?? `HTTP ${res.status}`);
   }
+  if (res.status === 204) {
+    return undefined as T;
+  }
   return res.json() as Promise<T>;
 }
 
@@ -113,9 +116,29 @@ export interface AdminStats {
   topBusinesses: { business: Business; leadCount: number }[];
 }
 
+export interface Product {
+  id: number;
+  businessId: number;
+  name: string;
+  description: string;
+  image: string;
+  price: string;
+  category: string;
+  featured: boolean;
+  active: boolean;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const api = {
   societies: {
     list: () => request<Society[]>("/societies"),
+    findOrCreate: (name: string, city?: string) =>
+      request<Society>("/societies/find-or-create", {
+        method: "POST",
+        body: JSON.stringify({ name, city }),
+      }),
   },
   businesses: {
     list: (params?: { societyId?: number; category?: string }) => {
@@ -177,4 +200,42 @@ export const api = {
         body: JSON.stringify({ status }),
       }),
   },
+  products: {
+    list: (businessId: number) => request<Product[]>(`/businesses/${businessId}/products`),
+    manage: (businessId: number) => request<Product[]>(`/businesses/${businessId}/products/manage`),
+    create: (businessId: number, data: {
+      name: string;
+      description?: string;
+      image?: string;
+      price?: string;
+      category?: string;
+      featured?: boolean;
+      active?: boolean;
+    }) =>
+      request<Product>(`/businesses/${businessId}/products`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    update: (productId: number, data: {
+      name?: string;
+      description?: string;
+      image?: string;
+      price?: string;
+      category?: string;
+      featured?: boolean;
+      active?: boolean;
+    }) =>
+      request<Product>(`/products/${productId}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    delete: (productId: number) =>
+      request<void>(`/products/${productId}`, { method: "DELETE" }),
+    reorder: (businessId: number, productIds: number[]) =>
+      request<Product[]>(`/businesses/${businessId}/products/reorder`, {
+        method: "PATCH",
+        body: JSON.stringify({ productIds }),
+      }),
+  },
 };
+

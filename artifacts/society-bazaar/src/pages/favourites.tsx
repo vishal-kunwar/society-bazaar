@@ -1,6 +1,6 @@
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useClerk } from "@clerk/react";
+import { useClerk, UserButton } from "@clerk/react";
 import { motion } from "framer-motion";
 import { MapPin, Heart, Star, TrendingUp, MessageCircle, LogOut, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -55,9 +55,14 @@ export default function Favourites() {
               Hust<span className="text-primary">ly</span>
             </span>
           </div>
-          <Button variant="outline" size="sm" onClick={() => signOut({ redirectUrl: basePath || "/" })}>
-            <LogOut className="w-4 h-4 mr-2" /> Sign Out
-          </Button>
+          <div className="flex items-center gap-2 border-l border-border/40 pl-2 ml-1">
+            <Button variant="outline" size="sm" onClick={() => signOut({ redirectUrl: basePath || "/" })}>
+              <LogOut className="w-4 h-4 mr-2" /> Sign Out
+            </Button>
+            <div className="h-8 w-8 flex items-center justify-center">
+              <UserButton />
+            </div>
+          </div>
         </div>
       </nav>
 

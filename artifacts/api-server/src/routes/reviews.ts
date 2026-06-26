@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { reviewsTable, businessesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { requireAuth } from "../middlewares/requireAuth";
 import type { AuthedRequest } from "../middlewares/requireAuth";
 import type { Request, Response } from "express";
@@ -22,12 +22,31 @@ router.post("/reviews", requireAuth, async (req: Request, res: Response) => {
   }
 
   const [biz] = await db
-    .select({ id: businessesTable.id })
+    .select({ id: businessesTable.id, status: businessesTable.status })
     .from(businessesTable)
     .where(eq(businessesTable.id, Number(businessId)))
     .limit(1);
   if (!biz) {
     res.status(404).json({ error: "Business not found" });
+    return;
+  }
+  if (biz.status !== "approved") {
+    res.status(400).json({ error: "Reviews can only be submitted for approved businesses" });
+    return;
+  }
+
+  const [existingReview] = await db
+    .select({ id: reviewsTable.id })
+    .from(reviewsTable)
+    .where(
+      and(
+        eq(reviewsTable.businessId, Number(businessId)),
+        eq(reviewsTable.clerkUserId, userId),
+      ),
+    )
+    .limit(1);
+  if (existingReview) {
+    res.status(409).json({ error: "You have already reviewed this business" });
     return;
   }
 

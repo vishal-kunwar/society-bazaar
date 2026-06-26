@@ -9,8 +9,7 @@ import type { Request, Response } from "express";
 const router = Router();
 
 router.get("/businesses", async (req: Request, res: Response) => {
-  const { societyId, category, status } = req.query;
-  const approvedStatus = (status as string) || "approved";
+  const { societyId, category } = req.query;
 
   const rows = await db
     .select({
@@ -26,7 +25,7 @@ router.get("/businesses", async (req: Request, res: Response) => {
     .leftJoin(leadsTable, eq(leadsTable.businessId, businessesTable.id))
     .where(
       and(
-        eq(businessesTable.status, approvedStatus as "approved" | "pending" | "rejected" | "paused"),
+        eq(businessesTable.status, "approved"),
         societyId ? eq(businessesTable.societyId, Number(societyId)) : undefined,
         category ? sql`${businessesTable.category} = ${category}` : undefined,
       ),
@@ -51,7 +50,7 @@ router.get("/businesses/:id", async (req: Request, res: Response) => {
     .leftJoin(societiesTable, eq(businessesTable.societyId, societiesTable.id))
     .leftJoin(reviewsTable, eq(reviewsTable.businessId, businessesTable.id))
     .leftJoin(leadsTable, eq(leadsTable.businessId, businessesTable.id))
-    .where(eq(businessesTable.id, id))
+    .where(and(eq(businessesTable.id, id), eq(businessesTable.status, "approved")))
     .groupBy(businessesTable.id, societiesTable.id)
     .limit(1);
 

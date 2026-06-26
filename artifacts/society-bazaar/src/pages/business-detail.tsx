@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { motion } from "framer-motion";
-import { MapPin, ArrowLeft, Star, MessageCircle, Phone, Heart, RefreshCw } from "lucide-react";
+import { MapPin, ArrowLeft, Star, MessageCircle, Phone, Heart, RefreshCw, Package } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUser } from "@clerk/react";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { api } from "@/lib/api";
+import { api, type Product } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 const CATEGORY_IMAGES: Record<string, string> = {
@@ -34,10 +34,17 @@ export default function BusinessDetail() {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["business", id],
     queryFn: () => api.businesses.get(Number(id)),
+  });
+
+  const { data: products } = useQuery({
+    queryKey: ["products", id],
+    queryFn: () => api.products.list(Number(id)),
+    enabled: !!id,
   });
 
   const { data: favIds } = useQuery({
@@ -66,10 +73,16 @@ export default function BusinessDetail() {
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
-  const handleWhatsApp = (source = "whatsapp") => {
+  const handleWhatsApp = (source = "whatsapp", product?: Product | null) => {
     if (!data) return;
+    const item = product ?? selectedProduct;
     api.leads.track(data.business.id, source).catch(() => {});
-    const msg = encodeURIComponent("Hi, I found your business on Hustly and would like to know more.");
+    let text = "Hi, I found your business on Hustly and would like to know more.";
+    if (item) {
+      const pricePart = item.price ? ` (${item.price})` : "";
+      text = `Hi, I found your business on Hustly. I'm interested in: ${item.name}${pricePart}.`;
+    }
+    const msg = encodeURIComponent(text);
     window.open(`https://wa.me/${data.business.whatsapp.replace(/\D/g, "")}?text=${msg}`, "_blank");
     if (source !== "repeat") {
       setTimeout(() => {
@@ -197,6 +210,78 @@ export default function BusinessDetail() {
                 </CardContent>
               </Card>
 
+              {/* Products & Services */}
+              {products && products.length > 0 && (
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Package className="w-5 h-5 text-primary" />
+                    <h2 className="text-lg font-bold">Products & Services</h2>
+                    <span className="text-sm text-muted-foreground">({products.length})</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Tap a product to select it — your WhatsApp message will include your choice.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {products.map(product => {
+                      const isSelected = selectedProduct?.id === product.id;
+                      return (
+                        <Card
+                          key={product.id}
+                          onClick={() => setSelectedProduct(isSelected ? null : product)}
+                          className={`overflow-hidden border-border/50 cursor-pointer transition-all hover:shadow-md ${
+                            isSelected ? "ring-2 ring-primary border-primary/50 shadow-md" : ""
+                          }`}
+                        >
+                          <div className="relative h-36 bg-muted overflow-hidden">
+                            {product.image ? (
+                              <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-muted">
+                                <Package className="w-8 h-8 text-muted-foreground/40" />
+                              </div>
+                            )}
+                            {product.featured && (
+                              <span className="absolute top-2 left-2 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                                <Star className="w-3 h-3 fill-yellow-900" />Featured
+                              </span>
+                            )}
+                            {isSelected && (
+                              <span className="absolute top-2 right-2 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                Selected
+                              </span>
+                            )}
+                          </div>
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between gap-2 mb-1">
+                              <h3 className="font-bold text-sm leading-tight">{product.name}</h3>
+                              {product.price && (
+                                <span className="text-sm font-bold text-primary shrink-0">{product.price}</span>
+                              )}
+                            </div>
+                            {product.category && (
+                              <Badge variant="secondary" className="text-[10px] mb-2">{product.category}</Badge>
+                            )}
+                            {product.description && (
+                              <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedProduct(product);
+                                handleWhatsApp("whatsapp", product);
+                              }}
+                              className="mt-3 w-full inline-flex items-center justify-center rounded-lg h-8 text-xs font-semibold bg-[#25D366] text-white hover:bg-[#20bd5a] transition-colors"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5 mr-1" /> Enquire on WhatsApp
+                            </button>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Reviews */}
               {reviews && reviews.length > 0 && (
                 <div className="mb-6">
@@ -274,7 +359,12 @@ export default function BusinessDetail() {
                     <MessageCircle className="w-7 h-7 text-[#25D366]" />
                   </div>
                   <h3 className="font-bold text-center mb-1">{biz.businessName}</h3>
-                  <p className="text-xs text-muted-foreground text-center mb-5">Tap to start a conversation on WhatsApp</p>
+                  <p className="text-xs text-muted-foreground text-center mb-2">Tap to start a conversation on WhatsApp</p>
+                  {selectedProduct && (
+                    <p className="text-xs text-center mb-3 px-2 py-1.5 rounded-lg bg-primary/10 text-primary font-medium">
+                      Selected: {selectedProduct.name}
+                    </p>
+                  )}
                   <button
                     onClick={() => handleWhatsApp()}
                     className="w-full inline-flex items-center justify-center rounded-xl h-12 text-base font-bold bg-[#25D366] text-white hover:bg-[#20bd5a] transition-colors shadow"

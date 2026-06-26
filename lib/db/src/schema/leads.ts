@@ -7,6 +7,7 @@ export const leadsTable = pgTable("leads", {
   id: serial("id").primaryKey(),
   businessId: integer("business_id").notNull().references(() => businessesTable.id, { onDelete: "cascade" }),
   clerkUserId: text("clerk_user_id"),
+  ipAddress: text("ip_address"),
   source: text("source").notNull().default("whatsapp"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

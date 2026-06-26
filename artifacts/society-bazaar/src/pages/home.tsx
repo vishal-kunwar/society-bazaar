@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Show, useClerk, useUser } from "@clerk/react";
+import { Show, useClerk, useUser, UserButton } from "@clerk/react";
 import { api, type BusinessRow, type DealRow, type FeedPostRow } from "@/lib/api";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -223,17 +223,23 @@ export default function Home() {
               <Button variant="ghost" size="sm" onClick={() => setLocation("/dashboard")}>
                 <LayoutDashboard className="w-4 h-4 mr-1" />Dashboard
               </Button>
-              <Button size="sm" onClick={() => setLocation("/sell")}>
-                <Zap className="w-4 h-4 mr-1" />Start Your Hustle
+              <Button variant="outline" size="sm" onClick={() => setLocation("/sell")}>
+                List Your Business
               </Button>
-              <Button variant="outline" size="sm" onClick={() => signOut({ redirectUrl: basePath || "/" })}>
-                Sign Out
-              </Button>
+              <div className="flex items-center gap-2 border-l border-border/40 pl-2 ml-2">
+                <Button variant="outline" size="sm" onClick={() => signOut({ redirectUrl: basePath || "/" })}>
+                  Sign Out
+                </Button>
+                <div className="h-8 w-8 flex items-center justify-center">
+                  <UserButton />
+                </div>
+              </div>
             </Show>
             <Show when="signed-out">
               <Button variant="ghost" size="sm" onClick={() => setLocation("/sign-in")}>Sign In</Button>
-              <Button size="sm" onClick={() => setLocation("/sell")}>
-                <Zap className="w-4 h-4 mr-1" />Start Your Hustle
+              <Button variant="outline" size="sm" onClick={() => setLocation("/sign-up")}>Sign Up</Button>
+              <Button variant="outline" size="sm" onClick={() => setLocation("/sell")}>
+                List Your Business
               </Button>
             </Show>
           </div>
@@ -253,15 +259,16 @@ export default function Home() {
               <Button variant="ghost" size="sm" className="justify-start" onClick={() => { setLocation("/dashboard"); setMobileMenuOpen(false); }}>
                 <LayoutDashboard className="w-4 h-4 mr-2" />Dashboard
               </Button>
-              <Button size="sm" className="justify-start" onClick={() => { setLocation("/sell"); setMobileMenuOpen(false); }}>
-                <Zap className="w-4 h-4 mr-2" />Start Your Hustle
+              <Button variant="ghost" size="sm" className="justify-start" onClick={() => { setLocation("/sell"); setMobileMenuOpen(false); }}>
+                List Your Business
               </Button>
               <Button variant="outline" size="sm" onClick={() => signOut({ redirectUrl: basePath || "/" })}>Sign Out</Button>
             </Show>
             <Show when="signed-out">
               <Button variant="ghost" size="sm" className="justify-start" onClick={() => { setLocation("/sign-in"); setMobileMenuOpen(false); }}>Sign In</Button>
-              <Button size="sm" className="justify-start" onClick={() => { setLocation("/sell"); setMobileMenuOpen(false); }}>
-                <Zap className="w-4 h-4 mr-2" />Start Your Hustle
+              <Button variant="outline" size="sm" className="justify-start" onClick={() => { setLocation("/sign-up"); setMobileMenuOpen(false); }}>Sign Up</Button>
+              <Button variant="ghost" size="sm" className="justify-start" onClick={() => { setLocation("/sell"); setMobileMenuOpen(false); }}>
+                List Your Business
               </Button>
             </Show>
           </motion.div>
@@ -277,28 +284,28 @@ export default function Home() {
               <Flame className="w-3.5 h-3.5" />500+ home hustles listed · First 50 leads free
             </div>
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-foreground leading-tight mb-5">
-              Turn your side hustle into a<br />
-              <span className="text-primary">trusted local business.</span>
+              Discover trusted home businesses<br />
+              <span className="text-primary">right in your society.</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-              Discover and support talented home businesses in your community.
+              Support talented home chefs, bakers, tutors, and more in your community.
               <br className="hidden md:block" />Tiffin, bakeries, tutors, yoga, tailors and more — right in your society.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 size="lg"
                 className="font-bold text-base px-8 h-13 shadow-lg shadow-primary/20"
-                onClick={() => setLocation("/sell")}
+                onClick={() => document.getElementById("explore")?.scrollIntoView({ behavior: "smooth" })}
               >
-                <Zap className="w-5 h-5 mr-2" />Start Your Hustle
+                <Search className="w-5 h-5 mr-2" />Explore Businesses
               </Button>
               <Button
                 size="lg"
                 variant="outline"
                 className="font-bold text-base px-8 h-13"
-                onClick={() => document.getElementById("explore")?.scrollIntoView({ behavior: "smooth" })}
+                onClick={() => setLocation("/sell")}
               >
-                Explore Local Businesses
+                List Your Business
               </Button>
             </div>
           </motion.div>
@@ -386,7 +393,7 @@ export default function Home() {
               </div>
               <h3 className="font-semibold text-foreground mb-2">No businesses found</h3>
               <p className="text-muted-foreground text-sm mb-6">Try adjusting your filters or be the first to list here!</p>
-              <Button onClick={() => setLocation("/sell")}>Start Your Hustle</Button>
+              <Button onClick={() => setLocation("/sell")}>List Your Business</Button>
             </div>
           )}
 
@@ -533,11 +540,11 @@ export default function Home() {
         </section>
       )}
 
-      {/* ── Seller CTA ── */}
-      <section className="py-20 bg-primary text-primary-foreground">
+      {/* ── For Sellers ── */}
+      <section className="py-20 bg-primary text-primary-foreground" id="for-sellers">
         <div className="container mx-auto px-4 md:px-6 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <h2 className="text-3xl md:text-4xl font-extrabold mb-4">Ready to start your hustle?</h2>
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-4">For Sellers: Grow Your Home Business</h2>
             <p className="text-primary-foreground/80 text-lg mb-8 max-w-xl mx-auto">
               Join hundreds of sellers earning from home. First 50 leads completely free.
             </p>
@@ -548,7 +555,7 @@ export default function Home() {
                 className="font-bold text-base px-8"
                 onClick={() => setLocation("/sell")}
               >
-                <Zap className="w-5 h-5 mr-2" />Start Your Hustle — It's Free
+                List Your Business — It's Free
               </Button>
               <Show when="signed-in">
                 <Button
@@ -702,3 +709,5 @@ export default function Home() {
     </div>
   );
 }
+
+

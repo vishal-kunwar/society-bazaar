@@ -1,11 +1,21 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { leadsTable, businessesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, and, gte, isNull } from "drizzle-orm";
 import type { Request, Response } from "express";
 import { getAuth as clerkGetAuth } from "@clerk/express";
 
 const router = Router();
+
+const AUTH_LEAD_DEDUP_MS = 24 * 60 * 60 * 1000;
+const ANON_LEAD_DEDUP_MS = 60 * 60 * 1000;
+
+function getClientIp(req: Request): string | null {
+  const xff = req.headers["x-forwarded-for"];
+  const raw = Array.isArray(xff) ? xff[0] : xff;
+  const ip = raw?.split(",")[0]?.trim() || req.socket?.remoteAddress;
+  return ip || null;
+}
 
 router.post("/leads", async (req: Request, res: Response) => {
   const { businessId, source } = req.body;
@@ -16,9 +26,10 @@ router.post("/leads", async (req: Request, res: Response) => {
 
   const auth = clerkGetAuth(req);
   const clerkUserId = auth?.userId ?? null;
+  const leadSource = source || "whatsapp";
 
   const [business] = await db
-    .select({ id: businessesTable.id })
+    .select({ id: businessesTable.id, status: businessesTable.status })
     .from(businessesTable)
     .where(eq(businessesTable.id, Number(businessId)))
     .limit(1);
@@ -27,10 +38,62 @@ router.post("/leads", async (req: Request, res: Response) => {
     res.status(404).json({ error: "Business not found" });
     return;
   }
+  if (business.status !== "approved") {
+    res.status(404).json({ error: "Business not found" });
+    return;
+  }
+
+  if (leadSource !== "repeat") {
+    const dedupMs = clerkUserId ? AUTH_LEAD_DEDUP_MS : ANON_LEAD_DEDUP_MS;
+    const since = new Date(Date.now() - dedupMs);
+
+    if (clerkUserId) {
+      const [existing] = await db
+        .select()
+        .from(leadsTable)
+        .where(
+          and(
+            eq(leadsTable.businessId, Number(businessId)),
+            eq(leadsTable.clerkUserId, clerkUserId),
+            gte(leadsTable.createdAt, since),
+          ),
+        )
+        .limit(1);
+      if (existing) {
+        res.status(200).json(existing);
+        return;
+      }
+    } else {
+      const clientIp = getClientIp(req);
+      if (clientIp) {
+        const [existing] = await db
+          .select()
+          .from(leadsTable)
+          .where(
+            and(
+              eq(leadsTable.businessId, Number(businessId)),
+              isNull(leadsTable.clerkUserId),
+              eq(leadsTable.ipAddress, clientIp),
+              gte(leadsTable.createdAt, since),
+            ),
+          )
+          .limit(1);
+        if (existing) {
+          res.status(200).json(existing);
+          return;
+        }
+      }
+    }
+  }
 
   const [lead] = await db
     .insert(leadsTable)
-    .values({ businessId: Number(businessId), clerkUserId, source: source || "whatsapp" })
+    .values({
+      businessId: Number(businessId),
+      clerkUserId,
+      ipAddress: clerkUserId ? null : getClientIp(req),
+      source: leadSource,
+    })
     .returning();
 
   res.status(201).json(lead);

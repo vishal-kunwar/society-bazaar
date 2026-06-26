@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { ClerkProvider, SignIn, SignUp, Show, useClerk } from "@clerk/react";
-import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
 import { Switch, Route, useLocation, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
@@ -13,15 +12,11 @@ import BusinessDetail from "@/pages/business-detail";
 import SellerDashboard from "@/pages/seller-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
 import Favourites from "@/pages/favourites";
+import SellerProducts from "@/pages/seller-products";
 
 const queryClient = new QueryClient();
 
-const clerkPubKey = publishableKeyFromHost(
-  window.location.hostname,
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
-);
-
-const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
+const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 function stripBase(path: string): string {
@@ -138,8 +133,8 @@ function ClerkProviderWithRoutes() {
   return (
     <ClerkProvider
       publishableKey={clerkPubKey}
-      proxyUrl={clerkProxyUrl}
       appearance={clerkAppearance}
+      afterSignOutUrl={basePath || "/"}
       signInUrl={`${basePath}/sign-in`}
       signUpUrl={`${basePath}/sign-up`}
       localization={{
@@ -168,6 +163,7 @@ function ClerkProviderWithRoutes() {
             <Route path="/sign-up/*?" component={SignUpPage} />
             <Route path="/sell" component={() => <ProtectedRoute component={Sell} />} />
             <Route path="/business/:id" component={BusinessDetail} />
+            <Route path="/dashboard/products/:businessId" component={() => <ProtectedRoute component={SellerProducts} />} />
             <Route path="/dashboard" component={() => <ProtectedRoute component={SellerDashboard} />} />
             <Route path="/admin" component={() => <ProtectedRoute component={AdminDashboard} />} />
             <Route path="/favourites" component={() => <ProtectedRoute component={Favourites} />} />

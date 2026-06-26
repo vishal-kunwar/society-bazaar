@@ -50,7 +50,7 @@ interface FormData {
   description: string;
   yearsInBusiness: string;
   // Step 3 – Location
-  societyId: string;
+  societyName: string;
   tower: string;
   flatNumber: string;
   city: string;
@@ -70,7 +70,7 @@ interface FormData {
 const EMPTY_FORM: FormData = {
   ownerName: "", phone: "", email: "",
   businessName: "", category: "", description: "", yearsInBusiness: "",
-  societyId: "", tower: "", flatNumber: "", city: "",
+  societyName: "", tower: "", flatNumber: "", city: "",
   whatsapp: "", alternatePhone: "", instagram: "", website: "",
   imageUrl: "", coverImageUrl: "",
   priceRange: "", servicesOffered: "",
@@ -225,17 +225,18 @@ export default function Sell() {
     queryFn: () => api.societies.list(),
   });
 
-  const selectedSociety = societies?.find(s => String(s.id) === formData.societyId);
+  
 
   const set = (field: keyof FormData, val: string) =>
     setFormData(prev => ({ ...prev, [field]: val }));
 
   const createBusiness = useMutation({
-    mutationFn: () =>
-      api.businesses.create({
+    mutationFn: async () => {
+      const society = await api.societies.findOrCreate(formData.societyName, formData.city);
+      return api.businesses.create({
         businessName: formData.businessName,
         ownerName: formData.ownerName,
-        societyId: Number(formData.societyId),
+        societyId: society.id,
         category: formData.category,
         phone: formData.phone,
         whatsapp: formData.whatsapp,
@@ -252,7 +253,8 @@ export default function Sell() {
         servicesOffered: formData.servicesOffered,
         imageUrl: formData.imageUrl,
         coverImageUrl: formData.coverImageUrl,
-      }),
+      });
+    },
     onSuccess: () => setSubmitted(true),
     onError: (e: Error) => toast({ title: "Submission failed", description: e.message, variant: "destructive" }),
   });
@@ -262,7 +264,7 @@ export default function Sell() {
     switch (step) {
       case 1: return !!formData.ownerName.trim() && !!formData.phone.trim() && !!formData.email.trim();
       case 2: return !!formData.businessName.trim() && !!formData.category && !!formData.description.trim();
-      case 3: return !!formData.societyId && !!formData.city.trim();
+      case 3: return !!formData.societyName.trim() && !!formData.city.trim();
       case 4: return !!formData.whatsapp.trim();
       case 5: return true; // Images optional
       case 6: return true; // Pricing optional
@@ -473,16 +475,22 @@ export default function Sell() {
                       <p className="text-sm text-muted-foreground">Buyers in your area will find you</p>
                     </div>
                     <FieldGroup label="Society Name" required>
-                      <Select value={formData.societyId} onValueChange={v => set("societyId", v)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your society" />
-                        </SelectTrigger>
-                        <SelectContent>
+                      <div className="relative">
+                        <Input
+                          id="society-name-input"
+                          list="society-suggestions"
+                          placeholder="Type your society name (e.g., Sunshine Residency)"
+                          value={formData.societyName}
+                          onChange={e => set("societyName", e.target.value)}
+                          autoComplete="off"
+                        />
+                        <datalist id="society-suggestions">
                           {societies?.map(s => (
-                            <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
+                            <option key={s.id} value={s.name} />
                           ))}
-                        </SelectContent>
-                      </Select>
+                        </datalist>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">Type any name — existing societies will appear as suggestions</p>
                     </FieldGroup>
                     <FieldGroup label="City" required>
                       <Input
@@ -646,14 +654,14 @@ export default function Sell() {
                       <h2 className="text-lg font-bold mb-0.5">Preview Your Listing</h2>
                       <p className="text-sm text-muted-foreground">This is exactly how buyers will see your business</p>
                     </div>
-                    <PreviewCard data={formData} society={selectedSociety?.name ?? ""} />
+                    <PreviewCard data={formData} society={formData.societyName} />
                     <div className="rounded-xl bg-muted/40 border border-border/50 p-4">
                       <p className="text-sm font-medium mb-2">Ready to submit?</p>
                       <ul className="space-y-1 text-sm text-muted-foreground">
                         {[
                           `Business: ${formData.businessName}`,
                           `Category: ${formData.category}`,
-                          `Society: ${selectedSociety?.name ?? "—"}${formData.city ? `, ${formData.city}` : ""}`,
+                          `Society: ${formData.societyName || "—"}${formData.city ? `, ${formData.city}` : ""}`,
                           `WhatsApp: ${formData.whatsapp}`,
                           formData.priceRange ? `Pricing: ${formData.priceRange}` : null,
                         ].filter(Boolean).map((item, i) => (
@@ -708,3 +716,5 @@ export default function Sell() {
     </div>
   );
 }
+
+

@@ -9,11 +9,13 @@ import feedRouter from "./feed";
 import dealsRouter from "./deals";
 import favouritesRouter from "./favourites";
 import analyticsRouter from "./analytics";
+import productsRouter from "./products";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(societiesRouter);
+router.use(productsRouter);
 router.use(businessesRouter);
 router.use(leadsRouter);
 router.use(reviewsRouter);

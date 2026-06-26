@@ -25,7 +25,7 @@ export const requireAdmin = (req: Request, res: Response, next: NextFunction) =>
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
-  if (ADMIN_USER_IDS.length > 0 && !ADMIN_USER_IDS.includes(userId)) {
+  if (ADMIN_USER_IDS.length === 0 || !ADMIN_USER_IDS.includes(userId)) {
     res.status(403).json({ error: "Forbidden" });
     return;
   }

@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useUser, useClerk } from "@clerk/react";
+import { useUser, useClerk, UserButton } from "@clerk/react";
 import { motion } from "framer-motion";
 import {
   MapPin, Star, TrendingUp, MessageCircle, Plus, Clock,
   CheckCircle2, XCircle, LogOut, Flame, Heart, Bell, Zap,
-  RefreshCw, PauseCircle, PlayCircle, Megaphone, Tag,
+  RefreshCw, PauseCircle, PlayCircle, Megaphone, Tag, Package,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -279,9 +279,14 @@ export default function SellerDashboard() {
             <Button variant="outline" size="sm" onClick={() => setLocation("/sell")}>
               <Plus className="w-4 h-4 mr-1" />New Listing
             </Button>
-            <Button variant="outline" size="sm" onClick={() => signOut({ redirectUrl: basePath || "/" })}>
-              <LogOut className="w-4 h-4 mr-1" />Sign Out
-            </Button>
+            <div className="flex items-center gap-2 border-l border-border/40 pl-2 ml-1">
+              <Button variant="outline" size="sm" onClick={() => signOut({ redirectUrl: basePath || "/" })}>
+                <LogOut className="w-4 h-4 mr-1" />Sign Out
+              </Button>
+              <div className="h-8 w-8 flex items-center justify-center">
+                <UserButton />
+              </div>
+            </div>
           </div>
         </div>
       </nav>
@@ -412,6 +417,9 @@ export default function SellerDashboard() {
                         )}
                       </div>
                       <div className="flex gap-2 shrink-0">
+                        <Button size="sm" variant="outline" onClick={() => setLocation(`/dashboard/products/${biz.id}`)}>
+                          <Package className="w-4 h-4 mr-1" />Products
+                        </Button>
                         {biz.status === "approved" && (
                           <Button size="sm" variant="outline" onClick={() => pauseMutation.mutate(biz.id)} disabled={pauseMutation.isPending}>
                             <PauseCircle className="w-4 h-4 mr-1" />Pause
