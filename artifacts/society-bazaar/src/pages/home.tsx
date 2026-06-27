@@ -625,6 +625,12 @@ export default function Home() {
               <button onClick={() => setLocation("/sign-in")} className="hover:text-foreground transition-colors">Sign In</button>
             </div>
           </div>
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-8 text-sm text-muted-foreground">
+              <button onClick={() => setLocation("/about")} className="hover:text-foreground transition-colors">About Us</button>
+              <button onClick={() => setLocation("/contact")} className="hover:text-foreground transition-colors">Contact Us</button>
+              <button onClick={() => setLocation("/terms")} className="hover:text-foreground transition-colors">Terms & Conditions</button>
+              <button onClick={() => setLocation("/refund")} className="hover:text-foreground transition-colors">Refund & Cancellation</button>
+          </div>
           <p className="text-center text-xs text-muted-foreground mt-8">
             © {new Date().getFullYear()} Hustly. Your neighbourhood marketplace.
             <button onClick={() => setLocation("/admin")} className="opacity-0 hover:opacity-30 ml-2 cursor-default hover:cursor-pointer transition-opacity text-[10px]">admin</button>
