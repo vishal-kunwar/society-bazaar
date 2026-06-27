@@ -98,7 +98,7 @@ router.get("/businesses/:id", async (req: Request, res: Response) => {
 });
 
 import { insertBusinessSchema } from "@workspace/db/schema";
-import { ZodError } from "zod/v4";
+import { ZodError } from "zod";
 
 router.post("/businesses", requireAuth, async (req: Request, res: Response, next) => {
   const { userId } = req as AuthedRequest;

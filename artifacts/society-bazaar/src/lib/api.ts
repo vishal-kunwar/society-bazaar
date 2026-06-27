@@ -3,6 +3,18 @@ const BASE = "/api";
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const headers: Record<string, string> = { "Content-Type": "application/json", ...(options?.headers as any ?? {}) };
   
+  const clerk = (window as any).Clerk;
+  if (clerk?.session) {
+    try {
+      const token = await clerk.session.getToken();
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+    } catch (e) {
+      console.error("Failed to get Clerk token", e);
+    }
+  }
+  
   const res = await fetch(`${BASE}${path}`, {
     credentials: "include",
     headers,
