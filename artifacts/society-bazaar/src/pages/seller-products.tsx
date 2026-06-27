@@ -328,7 +328,7 @@ export default function SellerProducts() {
                 value={form.image}
                 onChange={(url) => setForm(f => ({ ...f, image: url }))}
                 label="Upload Product Image"
-                variant="wide"
+                variant="square-full"
               />
             </div>
             <div className="flex items-center justify-between">

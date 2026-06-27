@@ -225,7 +225,7 @@ export default function BusinessDetail() {
                             isSelected ? "ring-2 ring-primary border-primary/50 shadow-md" : ""
                           }`}
                         >
-                          <div className="relative h-36 bg-muted overflow-hidden">
+                          <div className="relative aspect-square bg-muted overflow-hidden">
                             {product.image ? (
                               <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
                             ) : (

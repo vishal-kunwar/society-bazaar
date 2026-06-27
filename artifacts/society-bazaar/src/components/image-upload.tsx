@@ -10,7 +10,7 @@ interface ImageUploadProps {
   /** Label text for the upload area */
   label?: string;
   /** Shape variant for preview */
-  variant?: "square" | "wide";
+  variant?: "square" | "wide" | "square-full";
   /** Additional className for the wrapper */
   className?: string;
 }
@@ -76,7 +76,7 @@ export function ImageUpload({
     setError(null);
   }
 
-  const previewHeight = variant === "wide" ? "h-32" : "h-20 w-20";
+  const previewHeight = variant === "wide" ? "h-32" : (variant === "square-full" ? "aspect-square w-full" : "h-20 w-20");
 
   // If we have a current image, show preview with replace/remove options
   if (value) {
@@ -84,7 +84,7 @@ export function ImageUpload({
       <div className={`space-y-2 ${className}`}>
         <div className="flex items-end gap-3">
           <div
-            className={`${variant === "wide" ? "w-full h-32" : "w-20 h-20"} rounded-xl overflow-hidden border border-border bg-muted relative group`}
+            className={`${variant === "wide" ? "w-full h-32" : (variant === "square-full" ? "w-full aspect-square" : "w-20 h-20")} rounded-xl overflow-hidden border border-border bg-muted relative group`}
           >
             <img
               src={value}
