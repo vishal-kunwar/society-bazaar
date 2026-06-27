@@ -82,7 +82,7 @@ if (isClerkEnabled) {
   });
 }
 
-// Serve uploaded files statically under /api/uploads
+// Serve legacy uploaded files statically under /api/uploads
 app.use("/api/uploads", express.static(path.resolve(process.cwd(), "uploads")));
 
 app.use("/api", router);
