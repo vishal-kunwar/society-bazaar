@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useClerk, UserButton } from "@clerk/react";
 import { motion } from "framer-motion";
-import { MapPin, CheckCircle2, XCircle, Clock, TrendingUp, Building2, Users, LogOut, ShieldCheck } from "lucide-react";
+import { MapPin, CheckCircle2, XCircle, Clock, TrendingUp, Building2, Users, LogOut, ShieldCheck, IndianRupee } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,6 +42,21 @@ export default function AdminDashboard() {
       qc.invalidateQueries({ queryKey: ["admin-businesses"] });
       qc.invalidateQueries({ queryKey: ["admin-stats"] });
       toast({ title: "Status updated" });
+    },
+    onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
+  const { data: payments, isLoading: paymentsLoading } = useQuery({
+    queryKey: ["admin-payments"],
+    queryFn: () => api.admin.payments(),
+    enabled: activeTab === "payments",
+  });
+
+  const approvePayment = useMutation({
+    mutationFn: (id: number) => api.admin.updatePayment(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-payments"] });
+      toast({ title: "Payment approved" });
     },
     onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
@@ -124,7 +139,42 @@ export default function AdminDashboard() {
             <TabsTrigger value="pending">Pending</TabsTrigger>
             <TabsTrigger value="approved">Approved</TabsTrigger>
             <TabsTrigger value="rejected">Rejected</TabsTrigger>
+            <TabsTrigger value="payments">Payments</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="payments">
+            {paymentsLoading && <div className="grid gap-4">{[1, 2].map(i => <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />)}</div>}
+            {!paymentsLoading && (!payments || payments.length === 0) && (
+              <div className="text-center py-16 text-muted-foreground">No pending payments.</div>
+            )}
+            {!paymentsLoading && payments?.map((payment: any) => (
+              <Card key={payment.id} className="mb-4 border-border/50">
+                <CardContent className="p-5 flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold">Amount: ₹{payment.amount}</h3>
+                    <p className="text-sm text-muted-foreground">UTR: {payment.utrNumber}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Submitted: {new Date(payment.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  {payment.status === "pending" ? (
+                    <Button
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700"
+                      disabled={approvePayment.isPending}
+                      onClick={() => approvePayment.mutate(payment.id)}
+                    >
+                      <IndianRupee className="w-4 h-4 mr-1" /> Approve Payment
+                    </Button>
+                  ) : (
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      Approved
+                    </Badge>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </TabsContent>
 
           {["pending", "approved", "rejected"].map(tab => (
             <TabsContent key={tab} value={tab}>

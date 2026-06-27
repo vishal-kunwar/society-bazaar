@@ -5,6 +5,8 @@ import { societiesTable } from "./societies";
 
 export const businessStatusEnum = pgEnum("business_status", ["pending", "approved", "rejected", "paused"]);
 
+export const subscriptionPlanEnum = pgEnum("subscription_plan", ["free_trial", "pro"]);
+
 export const businessCategoryEnum = pgEnum("business_category", [
   "Food & Tiffin",
   "Bakery & Sweets",
@@ -30,6 +32,9 @@ export const businessesTable = pgTable("businesses", {
   status: businessStatusEnum("status").notNull().default("pending"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+  subscriptionPlan: subscriptionPlanEnum("subscription_plan").notNull().default("free_trial"),
+  proValidUntil: timestamp("pro_valid_until", { withTimezone: true }),
+
   // Extended onboarding fields (all optional for backwards compat)
   email: text("email"),
   yearsInBusiness: integer("years_in_business"),

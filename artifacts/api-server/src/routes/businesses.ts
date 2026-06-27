@@ -9,7 +9,7 @@ import type { Request, Response } from "express";
 const router = Router();
 
 router.get("/businesses", async (req: Request, res: Response) => {
-  const { societyId, category } = req.query;
+  const { societyId, category, city, locality } = req.query;
 
   const rows = await db
     .select({
@@ -27,13 +27,28 @@ router.get("/businesses", async (req: Request, res: Response) => {
       and(
         eq(businessesTable.status, "approved"),
         societyId ? eq(businessesTable.societyId, Number(societyId)) : undefined,
-        category ? sql`${businessesTable.category} = ${category}` : undefined,
+        category && category !== "all" ? sql`${businessesTable.category} = ${category}` : undefined,
+        city ? sql`lower(${societiesTable.city}) = lower(${city as string})` : undefined,
+        locality ? sql`lower(${societiesTable.locality}) = lower(${locality as string})` : undefined
       ),
     )
     .groupBy(businessesTable.id, societiesTable.id)
     .orderBy(desc(businessesTable.createdAt));
 
-  res.json(rows);
+  const enrichedRows = rows.map(row => {
+    const isPro = row.business.subscriptionPlan === "pro" && row.business.proValidUntil && new Date(row.business.proValidUntil) > new Date();
+    const daysSinceCreated = (new Date().getTime() - new Date(row.business.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+    const trialExpired = !isPro && (row.leadCount >= 25 || daysSinceCreated >= 90);
+    
+    const b = { ...row.business };
+    if (trialExpired) {
+      b.phone = "";
+      b.whatsapp = "";
+    }
+    return { ...row, business: b, trialExpired };
+  });
+
+  res.json(enrichedRows);
 });
 
 router.get("/businesses/:id", async (req: Request, res: Response) => {
@@ -64,7 +79,18 @@ router.get("/businesses/:id", async (req: Request, res: Response) => {
     .where(eq(reviewsTable.businessId, id))
     .orderBy(desc(reviewsTable.createdAt));
 
-  res.json({ ...rows[0], reviews });
+  const row = rows[0];
+  const isPro = row.business.subscriptionPlan === "pro" && row.business.proValidUntil && new Date(row.business.proValidUntil) > new Date();
+  const daysSinceCreated = (new Date().getTime() - new Date(row.business.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+  const trialExpired = !isPro && (row.leadCount >= 25 || daysSinceCreated >= 90);
+  
+  const b = { ...row.business };
+  if (trialExpired) {
+    b.phone = "";
+    b.whatsapp = "";
+  }
+
+  res.json({ ...row, business: b, trialExpired, reviews });
 });
 
 router.post("/businesses", requireAuth, async (req: Request, res: Response) => {
@@ -220,7 +246,17 @@ router.get("/my-businesses", requireAuth, async (req: Request, res: Response) =>
     .where(eq(businessesTable.clerkUserId, userId))
     .groupBy(businessesTable.id, societiesTable.id)
     .orderBy(desc(businessesTable.createdAt));
-  res.json(rows);
+
+  const enrichedRows = rows.map(row => {
+    const isPro = row.business.subscriptionPlan === "pro" && row.business.proValidUntil && new Date(row.business.proValidUntil) > new Date();
+    const daysSinceCreated = (new Date().getTime() - new Date(row.business.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+    const trialExpired = !isPro && (row.leadCount >= 25 || daysSinceCreated >= 90);
+    const daysRemaining = Math.max(0, 90 - Math.floor(daysSinceCreated));
+    
+    return { ...row, trialExpired, daysRemaining };
+  });
+
+  res.json(enrichedRows);
 });
 
 router.get("/my-businesses/:id", requireAuth, async (req: Request, res: Response) => {

@@ -20,6 +20,7 @@ export interface Society {
   id: number;
   name: string;
   city: string;
+  locality: string;
 }
 
 export interface Business {
@@ -48,6 +49,7 @@ export interface Business {
   priceRange?: string | null;
   servicesOffered?: string | null;
   coverImageUrl?: string | null;
+  subscriptionPlan?: string;
 }
 
 export interface BusinessRow {
@@ -57,6 +59,8 @@ export interface BusinessRow {
   reviewCount: number;
   leadCount: number;
   reviews?: Review[];
+  trialExpired?: boolean;
+  daysRemaining?: number;
 }
 
 export interface Review {
@@ -145,18 +149,25 @@ export interface Product {
 
 export const api = {
   societies: {
-    list: () => request<Society[]>("/societies"),
-    findOrCreate: (name: string, city?: string) =>
+    list: (city?: string, locality?: string) => {
+      const qs = new URLSearchParams();
+      if (city) qs.set("city", city);
+      if (locality) qs.set("locality", locality);
+      return request<Society[]>(`/societies${qs.toString() ? `?${qs.toString()}` : ""}`);
+    },
+    findOrCreate: (name: string, city?: string, locality?: string) =>
       request<Society>("/societies/find-or-create", {
         method: "POST",
-        body: JSON.stringify({ name, city }),
+        body: JSON.stringify({ name, city, locality }),
       }),
   },
   businesses: {
-    list: (params?: { societyId?: number; category?: string }) => {
+    list: (params?: { societyId?: number; category?: string; city?: string; locality?: string }) => {
       const qs = new URLSearchParams();
       if (params?.societyId) qs.set("societyId", String(params.societyId));
       if (params?.category) qs.set("category", params.category);
+      if (params?.city) qs.set("city", params.city);
+      if (params?.locality) qs.set("locality", params.locality);
       return request<BusinessRow[]>(`/businesses?${qs}`);
     },
     get: (id: number) => request<BusinessRow>(`/businesses/${id}`),
@@ -209,10 +220,12 @@ export const api = {
       return request<{ business: Business; society: Society | null }[]>(`/admin/businesses${qs}`);
     },
     updateStatus: (id: number, status: string) =>
-      request<Business>(`/admin/businesses/${id}/status`, {
+      request(`/admin/businesses/${id}/status`, {
         method: "PATCH",
         body: JSON.stringify({ status }),
       }),
+    payments: () => request<any[]>("/admin/payments"),
+    updatePayment: (id: number) => request(`/admin/payments/${id}/approve`, { method: "PATCH" }),
   },
   products: {
     list: (businessId: number) => request<Product[]>(`/businesses/${businessId}/products`),
@@ -251,5 +264,9 @@ export const api = {
         body: JSON.stringify({ productIds }),
       }),
   },
+  payments: {
+    create: (data: { businessId: number; utrNumber: string }) =>
+      request("/payments", { method: "POST", body: JSON.stringify(data) }),
+  }
 };
 

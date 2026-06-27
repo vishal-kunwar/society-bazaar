@@ -115,7 +115,7 @@ export default function BusinessDetail() {
     );
   }
 
-  const { business: biz, society, avgRating, reviewCount, leadCount, reviews } = data;
+  const { business: biz, society, avgRating, reviewCount, leadCount, reviews, trialExpired } = data;
   const imgUrl = biz.imageUrl || CATEGORY_IMAGES[biz.category] || CATEGORY_IMAGES["Others"];
   const isFav = favIds?.includes(biz.id) ?? false;
   const isNew = Date.now() - new Date(biz.createdAt).getTime() < 14 * 24 * 60 * 60 * 1000;
@@ -175,7 +175,7 @@ export default function BusinessDetail() {
                   </div>
                   <p className="text-muted-foreground flex items-center gap-1 text-sm">
                     <MapPin className="w-3.5 h-3.5" />
-                    {society?.name}{society?.city ? `, ${society.city}` : ""}
+                    {society?.name}{society?.locality ? `, ${society.locality}` : ""}{society?.city ? `, ${society.city}` : ""}
                   </p>
                 </div>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -264,16 +264,25 @@ export default function BusinessDetail() {
                             {product.description && (
                               <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
                             )}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedProduct(product);
-                                handleWhatsApp("whatsapp", product);
-                              }}
-                              className="mt-3 w-full inline-flex items-center justify-center rounded-lg h-8 text-xs font-semibold bg-[#25D366] text-white hover:bg-[#20bd5a] transition-colors"
-                            >
-                              <MessageCircle className="w-3.5 h-3.5 mr-1" /> Enquire on WhatsApp
-                            </button>
+                            {trialExpired ? (
+                              <button
+                                disabled
+                                className="mt-3 w-full inline-flex items-center justify-center rounded-lg h-8 text-xs font-semibold bg-muted text-muted-foreground cursor-not-allowed"
+                              >
+                                <Phone className="w-3.5 h-3.5 mr-1" /> Unavailable
+                              </button>
+                            ) : (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedProduct(product);
+                                  handleWhatsApp("whatsapp", product);
+                                }}
+                                className="mt-3 w-full inline-flex items-center justify-center rounded-lg h-8 text-xs font-semibold bg-[#25D366] text-white hover:bg-[#20bd5a] transition-colors"
+                              >
+                                <MessageCircle className="w-3.5 h-3.5 mr-1" /> Enquire on WhatsApp
+                              </button>
+                            )}
                           </CardContent>
                         </Card>
                       );
@@ -365,12 +374,26 @@ export default function BusinessDetail() {
                       Selected: {selectedProduct.name}
                     </p>
                   )}
-                  <button
-                    onClick={() => handleWhatsApp()}
-                    className="w-full inline-flex items-center justify-center rounded-xl h-12 text-base font-bold bg-[#25D366] text-white hover:bg-[#20bd5a] transition-colors shadow"
-                  >
-                    <MessageCircle className="w-5 h-5 mr-2" /> WhatsApp Now
-                  </button>
+                  {trialExpired ? (
+                    <div className="relative group w-full">
+                      <button
+                        disabled
+                        className="w-full inline-flex items-center justify-center rounded-xl h-12 text-base font-bold bg-muted text-muted-foreground cursor-not-allowed shadow"
+                      >
+                        <Phone className="w-5 h-5 mr-2" /> Seller Unavailable
+                      </button>
+                      <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity bg-popover text-popover-foreground text-xs rounded-md py-1 px-2 bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 text-center pointer-events-none z-10 shadow-md">
+                        This seller's subscription has expired. Contact will be available once the seller renews their plan.
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleWhatsApp()}
+                      className="w-full inline-flex items-center justify-center rounded-xl h-12 text-base font-bold bg-[#25D366] text-white hover:bg-[#20bd5a] transition-colors shadow"
+                    >
+                      <MessageCircle className="w-5 h-5 mr-2" /> WhatsApp Now
+                    </button>
+                  )}
                   {user && (
                     <button
                       onClick={() => handleWhatsApp("repeat")}

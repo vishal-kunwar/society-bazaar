@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { businessesTable, societiesTable, leadsTable, reviewsTable } from "@workspace/db";
+import { businessesTable, societiesTable, leadsTable, reviewsTable, paymentsTable } from "@workspace/db";
 import { eq, desc, sql, count } from "drizzle-orm";
 import { requireAdmin, isClerkEnabled, ADMIN_USER_IDS } from "../middlewares/requireAuth";
 import { getAuth } from "@clerk/express";
@@ -110,6 +110,57 @@ router.patch("/admin/businesses/:id/status", requireAdmin, async (req: Request, 
   }
 
   res.json(updated);
+});
+
+router.get("/admin/payments", requireAdmin, async (req: Request, res: Response) => {
+  const { status } = req.query;
+  const rows = await db
+    .select({ payment: paymentsTable, business: businessesTable })
+    .from(paymentsTable)
+    .leftJoin(businessesTable, eq(paymentsTable.businessId, businessesTable.id))
+    .where(status ? eq(paymentsTable.status, status as "pending" | "approved" | "rejected") : undefined)
+    .orderBy(desc(paymentsTable.createdAt));
+  res.json(rows);
+});
+
+router.patch("/admin/payments/:id/approve", requireAdmin, async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  const [payment] = await db
+    .update(paymentsTable)
+    .set({ status: "approved" })
+    .where(eq(paymentsTable.id, id))
+    .returning();
+
+  if (!payment) {
+    res.status(404).json({ error: "Payment not found" });
+    return;
+  }
+
+  const proValidUntil = new Date();
+  proValidUntil.setDate(proValidUntil.getDate() + 30);
+
+  await db
+    .update(businessesTable)
+    .set({ subscriptionPlan: "pro", proValidUntil })
+    .where(eq(businessesTable.id, payment.businessId));
+
+  res.json(payment);
+});
+
+router.patch("/admin/payments/:id/reject", requireAdmin, async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  const [payment] = await db
+    .update(paymentsTable)
+    .set({ status: "rejected" })
+    .where(eq(paymentsTable.id, id))
+    .returning();
+
+  if (!payment) {
+    res.status(404).json({ error: "Payment not found" });
+    return;
+  }
+
+  res.json(payment);
 });
 
 export default router;

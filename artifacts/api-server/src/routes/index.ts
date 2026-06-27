@@ -11,6 +11,7 @@ import favouritesRouter from "./favourites";
 import analyticsRouter from "./analytics";
 import productsRouter from "./products";
 import uploadRouter from "./upload";
+import paymentsRouter from "./payments";
 
 const router: IRouter = Router();
 
@@ -25,6 +26,7 @@ router.use(feedRouter);
 router.use(dealsRouter);
 router.use(favouritesRouter);
 router.use(analyticsRouter);
+router.use(paymentsRouter);
 router.use(uploadRouter);
 
 export default router;

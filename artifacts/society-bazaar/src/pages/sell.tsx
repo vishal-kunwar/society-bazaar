@@ -52,6 +52,7 @@ interface FormData {
   yearsInBusiness: string;
   // Step 3 – Location
   societyName: string;
+  locality: string;
   tower: string;
   flatNumber: string;
   city: string;
@@ -71,7 +72,7 @@ interface FormData {
 const EMPTY_FORM: FormData = {
   ownerName: "", phone: "", email: "",
   businessName: "", category: "", description: "", yearsInBusiness: "",
-  societyName: "", tower: "", flatNumber: "", city: "",
+  societyName: "", locality: "", tower: "", flatNumber: "", city: "",
   whatsapp: "", alternatePhone: "", instagram: "", website: "",
   imageUrl: "", coverImageUrl: "",
   priceRange: "", servicesOffered: "",
@@ -164,7 +165,7 @@ function PreviewCard({ data, society }: { data: FormData; society: string }) {
               {data.category && <Badge variant="secondary" className="text-xs">{data.category}</Badge>}
             </div>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <MapPin className="w-3 h-3" />{society || "Your Society"}{data.city ? `, ${data.city}` : ""}
+              <MapPin className="w-3 h-3" />{society || "Your Society"}{data.locality ? `, ${data.locality}` : ""}{data.city ? `, ${data.city}` : ""}
             </p>
           </div>
           <div className="text-xs text-muted-foreground text-right">
@@ -222,8 +223,9 @@ export default function Sell() {
   const [submitted, setSubmitted] = useState(false);
 
   const { data: societies } = useQuery({
-    queryKey: ["societies"],
-    queryFn: () => api.societies.list(),
+    queryKey: ["societies", formData.city, formData.locality],
+    queryFn: () => api.societies.list(formData.city || undefined, formData.locality || undefined),
+    enabled: !!formData.city && !!formData.locality,
   });
 
   
@@ -233,7 +235,7 @@ export default function Sell() {
 
   const createBusiness = useMutation({
     mutationFn: async () => {
-      const society = await api.societies.findOrCreate(formData.societyName, formData.city);
+      const society = await api.societies.findOrCreate(formData.societyName, formData.city, formData.locality);
       return api.businesses.create({
         businessName: formData.businessName,
         ownerName: formData.ownerName,
@@ -265,7 +267,7 @@ export default function Sell() {
     switch (step) {
       case 1: return !!formData.ownerName.trim() && !!formData.phone.trim() && !!formData.email.trim();
       case 2: return !!formData.businessName.trim() && !!formData.category && !!formData.description.trim();
-      case 3: return !!formData.societyName.trim() && !!formData.city.trim();
+      case 3: return !!formData.societyName.trim() && !!formData.locality.trim() && !!formData.city.trim();
       case 4: return !!formData.whatsapp.trim();
       case 5: return true; // Images optional
       case 6: return true; // Pricing optional
@@ -475,15 +477,34 @@ export default function Sell() {
                       <h2 className="text-lg font-bold mb-0.5">Location</h2>
                       <p className="text-sm text-muted-foreground">Buyers in your area will find you</p>
                     </div>
+                    <FieldGroup label="City" required>
+                      <Select value={formData.city} onValueChange={v => set("city", v)}>
+                        <SelectTrigger><SelectValue placeholder="Select your city" /></SelectTrigger>
+                        <SelectContent>
+                          {["Delhi", "Gurgaon", "Noida", "Pune", "Mumbai", "Bangalore", "Hyderabad"].map(c => (
+                            <SelectItem key={c} value={c}>{c}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FieldGroup>
+                    <FieldGroup label="Locality / Area" required>
+                      <Input
+                        placeholder="e.g., Kesnand, Baner, Wakad"
+                        value={formData.locality}
+                        onChange={e => set("locality", e.target.value)}
+                        disabled={!formData.city}
+                      />
+                    </FieldGroup>
                     <FieldGroup label="Society Name" required>
                       <div className="relative">
                         <Input
                           id="society-name-input"
                           list="society-suggestions"
-                          placeholder="Type your society name (e.g., Sunshine Residency)"
+                          placeholder={formData.locality ? "Type your society name" : "Please select a locality first"}
                           value={formData.societyName}
                           onChange={e => set("societyName", e.target.value)}
                           autoComplete="off"
+                          disabled={!formData.locality}
                         />
                         <datalist id="society-suggestions">
                           {societies?.map(s => (
@@ -491,14 +512,7 @@ export default function Sell() {
                           ))}
                         </datalist>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">Type any name — existing societies will appear as suggestions</p>
-                    </FieldGroup>
-                    <FieldGroup label="City" required>
-                      <Input
-                        placeholder="e.g., Mumbai"
-                        value={formData.city}
-                        onChange={e => set("city", e.target.value)}
-                      />
+                      <p className="text-xs text-muted-foreground mt-1">Type any name — existing societies in {formData.locality || "your area"} will appear as suggestions</p>
                     </FieldGroup>
                     <FieldGroup label="Tower / Wing">
                       <Input
@@ -647,7 +661,7 @@ export default function Sell() {
                         {[
                           `Business: ${formData.businessName}`,
                           `Category: ${formData.category}`,
-                          `Society: ${formData.societyName || "—"}${formData.city ? `, ${formData.city}` : ""}`,
+                          `Society: ${formData.societyName || "—"}${formData.locality ? `, ${formData.locality}` : ""}${formData.city ? `, ${formData.city}` : ""}`,
                           `WhatsApp: ${formData.whatsapp}`,
                           formData.priceRange ? `Pricing: ${formData.priceRange}` : null,
                         ].filter(Boolean).map((item, i) => (

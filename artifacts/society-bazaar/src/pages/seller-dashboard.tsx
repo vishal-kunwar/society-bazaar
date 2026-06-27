@@ -33,59 +33,118 @@ const STATUS_ICONS: Record<string, React.ElementType> = {
   paused: PauseCircle,
 };
 
-function SubscriptionTracker({ totalLeads, subscriptionStartDate }: { totalLeads: number; subscriptionStartDate?: string }) {
-  const MAX_LEADS = 50;
-  const MAX_DAYS = 90;
+import type { BusinessRow } from "@/lib/api";
 
-  const daysUsed = subscriptionStartDate
-    ? Math.min(Math.floor((Date.now() - new Date(subscriptionStartDate).getTime()) / (1000 * 60 * 60 * 24)), MAX_DAYS)
-    : 0;
-  const leadsUsed = Math.min(totalLeads, MAX_LEADS);
-  const trialOver = leadsUsed >= MAX_LEADS || daysUsed >= MAX_DAYS;
+function SubscriptionTracker({ biz, onUpgrade }: { biz: BusinessRow; onUpgrade: (id: number) => void }) {
+  const isPro = biz.business.subscriptionPlan === "pro";
+  const trialOver = biz.trialExpired;
+  const leadsUsed = biz.leadCount;
+  const daysRemaining = biz.daysRemaining ?? 0;
+  const daysUsed = Math.max(0, 90 - daysRemaining);
+
+  if (isPro) {
+    return (
+      <Card className="border-2 border-primary/30 bg-primary/5 mb-4">
+        <CardContent className="p-5 flex items-center justify-between">
+          <div>
+            <h3 className="font-bold text-base text-primary">Pro Seller 🚀 - {biz.business.businessName}</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">Your subscription is active.</p>
+          </div>
+          <Badge className="bg-primary text-white">Active</Badge>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card className={`border-2 ${trialOver ? "border-orange-300 bg-orange-50" : "border-primary/30 bg-primary/5"}`}>
+    <Card className={`mb-4 border-2 ${trialOver ? "border-orange-300 bg-orange-50" : "border-primary/30 bg-primary/5"}`}>
       <CardContent className="p-5">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <div>
             <h3 className="font-bold text-base">
-              {trialOver ? "Trial Complete — Upgrade to Continue" : "Founding Seller Offer 🎉"}
+              {trialOver ? `Trial Complete — ${biz.business.businessName}` : `Founding Seller Offer 🎉 — ${biz.business.businessName}`}
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
               {trialOver
-                ? "You've used your free trial. Upgrade to ₹199/month to keep growing."
-                : "First 50 leads free OR 90 days free — whichever comes first."}
+                ? "Contact features are disabled. Upgrade to Pro - ₹199/month to reactivate."
+                : "First 25 leads free OR 90 days free — whichever comes first."}
             </p>
           </div>
-          {trialOver && (
-            <Button size="sm" className="shrink-0 bg-orange-500 hover:bg-orange-600 text-white">
-              Upgrade — ₹199/mo
-            </Button>
-          )}
+          <Button size="sm" onClick={() => onUpgrade(biz.business.id)} className="shrink-0 bg-orange-500 hover:bg-orange-600 text-white">
+            Upgrade to Pro — ₹199/month
+          </Button>
         </div>
         <div className="space-y-3">
           <div>
             <div className="flex justify-between text-xs font-medium mb-1">
               <span>Leads Used</span>
-              <span className={leadsUsed >= MAX_LEADS ? "text-orange-600 font-bold" : ""}>{leadsUsed} / {MAX_LEADS}</span>
+              <span className={leadsUsed >= 25 ? "text-orange-600 font-bold" : ""}>{leadsUsed} / 25</span>
             </div>
-            <Progress value={(leadsUsed / MAX_LEADS) * 100} className="h-2" />
+            <Progress value={Math.min((leadsUsed / 25) * 100, 100)} className="h-2" />
           </div>
           <div>
             <div className="flex justify-between text-xs font-medium mb-1">
               <span>Days Used</span>
-              <span className={daysUsed >= MAX_DAYS ? "text-orange-600 font-bold" : ""}>{daysUsed} / {MAX_DAYS}</span>
+              <span className={daysUsed >= 90 ? "text-orange-600 font-bold" : ""}>{daysUsed} / 90</span>
             </div>
-            <Progress value={(daysUsed / MAX_DAYS) * 100} className="h-2" />
+            <Progress value={Math.min((daysUsed / 90) * 100, 100)} className="h-2" />
           </div>
         </div>
         {!trialOver && (
-          <p className="text-xs text-muted-foreground mt-3 text-center">
-            {MAX_LEADS - leadsUsed} leads remaining · {MAX_DAYS - daysUsed} days remaining
+          <p className="text-xs text-muted-foreground mt-3 text-center font-medium">
+            Trial Days Remaining: {daysRemaining}
           </p>
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function UpgradeModal({ isOpen, onClose, businessId }: { isOpen: boolean; onClose: () => void; businessId: number | null }) {
+  const [utr, setUtr] = useState("");
+  const qc = useQueryClient();
+  const { toast } = useToast();
+
+  const submitPayment = useMutation({
+    mutationFn: () => api.payments.create({ businessId: businessId!, utrNumber: utr }),
+    onSuccess: () => {
+      toast({ title: "Payment submitted! Admins will review it shortly." });
+      setUtr("");
+      onClose();
+    },
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" })
+  });
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Upgrade to Pro - ₹199/month</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="bg-muted p-4 rounded-lg flex flex-col items-center justify-center space-y-2">
+            <div className="w-48 h-48 bg-white flex items-center justify-center border-4 border-primary">
+              <span className="font-bold text-xl text-primary text-center">UPI QR Code Placeholder</span>
+            </div>
+            <p className="text-sm font-medium">Scan to pay ₹199</p>
+            <p className="text-xs text-muted-foreground">UPI ID: societybazaar@okicici</p>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Submit UTR Number</label>
+            <Input placeholder="Enter 12-digit UTR number" value={utr} onChange={e => setUtr(e.target.value)} />
+            <p className="text-xs text-muted-foreground">Please enter the UTR/Reference number from your UPI app after successful payment.</p>
+          </div>
+          <div className="flex gap-2 justify-end mt-4">
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button onClick={() => submitPayment.mutate()} disabled={!utr || submitPayment.isPending}>
+              {submitPayment.isPending ? "Submitting..." : "Submit Payment"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
@@ -234,6 +293,7 @@ export default function SellerDashboard() {
   const { signOut } = useClerk();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const [upgradeBizId, setUpgradeBizId] = useState<number | null>(null);
 
   const { data: businesses, isLoading: bizLoading } = useQuery({
     queryKey: ["my-businesses"],
@@ -330,14 +390,15 @@ export default function SellerDashboard() {
         </div>
 
         {/* Subscription tracker */}
-        {analytics && (
-          <div className="mb-8">
+        <div className="mb-8">
+          {approvedBusinesses.map((biz) => (
             <SubscriptionTracker
-              totalLeads={analytics.totalLeads}
-              subscriptionStartDate={analytics.subscriptionStartDate}
+              key={`sub-${biz.business.id}`}
+              biz={biz}
+              onUpgrade={setUpgradeBizId}
             />
-          </div>
-        )}
+          ))}
+        </div>
 
         {/* Engagement tools */}
         {approvedBusinesses.length > 0 && (
@@ -447,6 +508,12 @@ export default function SellerDashboard() {
           })}
         </div>
       </main>
+
+      <UpgradeModal 
+        isOpen={upgradeBizId !== null} 
+        onClose={() => setUpgradeBizId(null)} 
+        businessId={upgradeBizId} 
+      />
     </div>
   );
 }

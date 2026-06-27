@@ -119,7 +119,7 @@ function BusinessCard({ row, isFav, onToggleFav, favPending, onWhatsApp, onClick
         <div className="mb-2" onClick={() => onClick(biz.id)}>
           <h3 className="font-bold text-foreground leading-tight mb-0.5 truncate">{biz.businessName}</h3>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <MapPin className="w-3 h-3 shrink-0" />{row.society?.name ?? "—"}
+            <MapPin className="w-3 h-3 shrink-0" />{row.society ? `${row.society.name}${row.society.locality ? `, ${row.society.locality}` : ""}` : "—"}
           </p>
         </div>
         <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
@@ -147,17 +147,53 @@ function BusinessCard({ row, isFav, onToggleFav, favPending, onWhatsApp, onClick
 export default function Home() {
   const [, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [selectedLocality, setSelectedLocality] = useState<string>("all");
   const [selectedSociety, setSelectedSociety] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [city, setCity] = useState<string>("");
+  const [showCityModal, setShowCityModal] = useState(false);
 
-  const { data: societies } = useQuery({ queryKey: ["societies"], queryFn: () => api.societies.list() });
+  useEffect(() => {
+    const saved = localStorage.getItem("hustly_city");
+    if (saved) {
+      setCity(saved);
+    } else {
+      setShowCityModal(true);
+    }
+  }, []);
+
+  const handleCitySelect = (c: string) => {
+    setCity(c);
+    localStorage.setItem("hustly_city", c);
+    setShowCityModal(false);
+    setSelectedLocality("all");
+    setSelectedSociety("all");
+  };
+
+  const { data: allSocietiesInCity } = useQuery({ 
+    queryKey: ["societies-city", city], 
+    queryFn: () => api.societies.list(city || undefined),
+    enabled: !!city
+  });
+
+  const localities = Array.from(new Set(allSocietiesInCity?.map(s => s.locality).filter(Boolean))) as string[];
+
+  const { data: societiesInLocality } = useQuery({
+    queryKey: ["societies-locality", city, selectedLocality],
+    queryFn: () => api.societies.list(city || undefined, selectedLocality === "all" ? undefined : selectedLocality),
+    enabled: !!city
+  });
+
   const { data: businesses, isLoading: bizLoading } = useQuery({
-    queryKey: ["businesses", selectedSociety, selectedCategory],
+    queryKey: ["businesses", selectedSociety, selectedLocality, selectedCategory, city],
     queryFn: () => api.businesses.list({
       societyId: selectedSociety !== "all" ? Number(selectedSociety) : undefined,
       category: selectedCategory !== "all" ? selectedCategory : undefined,
+      city: city || undefined,
+      locality: selectedLocality !== "all" ? selectedLocality : undefined,
     }),
+    enabled: !!city,
   });
   const { data: deals } = useQuery({ queryKey: ["deals"], queryFn: () => api.deals.list() });
   const { data: feed } = useQuery({
@@ -188,12 +224,30 @@ export default function Home() {
       {/* Navbar */}
       <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/90 backdrop-blur-md">
         <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setLocation("/")}>
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <MapPin className="text-primary-foreground w-5 h-5" />
+          {/* Logo & City Selector */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => setLocation("/")}>
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                <MapPin className="text-primary-foreground w-5 h-5" />
+              </div>
+              <span className="font-extrabold text-xl tracking-tight hidden sm:inline-block">Hust<span className="text-primary">ly</span></span>
             </div>
-            <span className="font-extrabold text-xl tracking-tight">Hust<span className="text-primary">ly</span></span>
+            {city && (
+              <Select value={city} onValueChange={handleCitySelect}>
+                <SelectTrigger className="w-[120px] h-8 text-xs bg-muted/50 border-none">
+                  <SelectValue placeholder="City" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Delhi">Delhi</SelectItem>
+                  <SelectItem value="Gurgaon">Gurgaon</SelectItem>
+                  <SelectItem value="Noida">Noida</SelectItem>
+                  <SelectItem value="Pune">Pune</SelectItem>
+                  <SelectItem value="Mumbai">Mumbai</SelectItem>
+                  <SelectItem value="Bangalore">Bangalore</SelectItem>
+                  <SelectItem value="Hyderabad">Hyderabad</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           {/* Desktop nav */}
@@ -345,17 +399,33 @@ export default function Home() {
                 onChange={e => setSearchQuery(e.target.value)}
               />
             </div>
-            <Select value={selectedSociety} onValueChange={setSelectedSociety}>
-              <SelectTrigger className="w-full sm:w-52">
-                <SelectValue placeholder="All Societies" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Societies</SelectItem>
-                {societies?.map(s => (
-                  <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <Select value={selectedLocality} onValueChange={(val) => {
+                setSelectedLocality(val);
+                setSelectedSociety("all");
+              }}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="All Localities" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Localities</SelectItem>
+                  {localities.sort().map(loc => (
+                    <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={selectedSociety} onValueChange={setSelectedSociety}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="All Societies" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Societies</SelectItem>
+                  {societiesInLocality?.map(s => (
+                    <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Results */}
@@ -379,8 +449,9 @@ export default function Home() {
               <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                 <Search className="w-7 h-7 text-muted-foreground" />
               </div>
-              <h3 className="font-semibold text-foreground mb-2">No businesses found</h3>
-              <p className="text-muted-foreground text-sm mb-6">Try adjusting your filters to find home businesses in your community.</p>
+              <h3 className="font-semibold text-foreground mb-2">No businesses found in {city}</h3>
+              <p className="text-muted-foreground text-sm mb-6">Try adjusting your filters or select a different city to find home businesses.</p>
+              <Button variant="outline" onClick={() => setShowCityModal(true)}>Change City</Button>
             </div>
           )}
 
@@ -431,7 +502,7 @@ export default function Home() {
                       <h3 className="font-bold mb-1 text-foreground">{row.deal.title}</h3>
                       <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{row.deal.description}</p>
                       <p className="text-xs font-medium text-foreground flex items-center gap-1 mb-4">
-                        <MapPin className="w-3 h-3 text-primary" />{row.business.businessName} · {row.society?.name ?? "—"}
+                        <MapPin className="w-3 h-3 text-primary" />{row.business.businessName} · {row.society ? `${row.society.name}${row.society.locality ? `, ${row.society.locality}` : ""}` : "—"}
                       </p>
                       <button
                         onClick={() => handleWhatsApp(row.business.id, row.business.whatsapp)}
@@ -496,7 +567,7 @@ export default function Home() {
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {feed.map((row: FeedPostRow, idx) => (
+              {feed.map((row: FeedPostRow, idx: number) => (
                 <motion.div key={row.post.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.06 }}>
                   <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow">
                     {row.post.imageUrl && (
@@ -507,7 +578,7 @@ export default function Home() {
                     <CardContent className="p-4">
                       <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
                         <MapPin className="w-3 h-3 text-primary" />
-                        {row.business.businessName} · {row.society?.name ?? "—"}
+                        {row.business.businessName} · {row.society ? `${row.society.name}${row.society.locality ? `, ${row.society.locality}` : ""}` : "—"}
                         <span className="ml-auto">{new Date(row.post.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>
                       </p>
                       <h3 className="font-bold mb-1 text-foreground leading-snug">{row.post.title}</h3>
@@ -550,6 +621,35 @@ export default function Home() {
           </p>
         </div>
       </footer>
+
+      {/* City Selection Modal */}
+      {showCityModal && (
+        <div className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-card text-card-foreground shadow-xl rounded-2xl p-6 w-full max-w-sm border border-border"
+          >
+            <div className="flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full mb-4 mx-auto">
+              <MapPin className="w-6 h-6 text-primary" />
+            </div>
+            <h2 className="text-2xl font-bold text-center mb-2">Welcome to Hustly</h2>
+            <p className="text-center text-muted-foreground mb-6">Select your city to discover local home businesses around you.</p>
+            <div className="grid grid-cols-2 gap-3">
+              {["Delhi", "Gurgaon", "Noida", "Pune", "Mumbai", "Bangalore", "Hyderabad"].map(c => (
+                <Button 
+                  key={c} 
+                  variant="outline" 
+                  onClick={() => handleCitySelect(c)}
+                  className="font-semibold"
+                >
+                  {c}
+                </Button>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

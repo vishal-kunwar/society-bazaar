@@ -37,6 +37,7 @@ interface FormData {
   description: string;
   yearsInBusiness: string;
   societyName: string;
+  locality: string;
   tower: string;
   flatNumber: string;
   city: string;
@@ -134,7 +135,7 @@ function PreviewCard({ data, society }: { data: FormData; society: string }) {
               {data.category && <Badge variant="secondary" className="text-xs">{data.category}</Badge>}
             </div>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <MapPin className="w-3 h-3" />{society || "Your Society"}{data.city ? `, ${data.city}` : ""}
+              <MapPin className="w-3 h-3" />{society || "Your Society"}{data.locality ? `, ${data.locality}` : ""}{data.city ? `, ${data.city}` : ""}
             </p>
           </div>
         </div>
@@ -164,6 +165,7 @@ function buildFormFromBusiness(biz: Business, society: Society | null): FormData
     description: biz.description ?? "",
     yearsInBusiness: biz.yearsInBusiness != null ? String(biz.yearsInBusiness) : "",
     societyName: society?.name ?? "",
+    locality: society?.locality ?? "",
     tower: biz.tower ?? "",
     flatNumber: biz.flatNumber ?? "",
     city: biz.city ?? society?.city ?? "",
@@ -188,8 +190,9 @@ export default function SellEdit() {
   const [saved, setSaved] = useState(false);
 
   const { data: societies } = useQuery({
-    queryKey: ["societies"],
-    queryFn: () => api.societies.list(),
+    queryKey: ["societies", formData?.city, formData?.locality],
+    queryFn: () => api.societies.list(formData?.city || undefined, formData?.locality || undefined),
+    enabled: !!formData?.city && !!formData?.locality,
   });
 
   const isValidId = Number.isFinite(businessId) && businessId > 0;
@@ -216,7 +219,7 @@ export default function SellEdit() {
   const updateBusiness = useMutation({
     mutationFn: async () => {
       if (!formData) return;
-      const society = await api.societies.findOrCreate(formData.societyName, formData.city);
+      const society = await api.societies.findOrCreate(formData.societyName, formData.city, formData.locality);
       return api.businesses.update(businessId, {
         businessName: formData.businessName,
         ownerName: formData.ownerName,
@@ -248,7 +251,7 @@ export default function SellEdit() {
     switch (step) {
       case 1: return !!formData.ownerName.trim() && !!formData.phone.trim() && !!formData.email.trim();
       case 2: return !!formData.businessName.trim() && !!formData.category && !!formData.description.trim();
-      case 3: return !!formData.societyName.trim() && !!formData.city.trim();
+      case 3: return !!formData.societyName.trim() && !!formData.locality.trim() && !!formData.city.trim();
       case 4: return !!formData.whatsapp.trim();
       default: return true;
     }
@@ -448,15 +451,34 @@ export default function SellEdit() {
                       <h2 className="text-lg font-bold mb-0.5">Location</h2>
                       <p className="text-sm text-muted-foreground">Update your society and address</p>
                     </div>
+                    <FieldGroup label="City" required>
+                      <Select value={formData.city} onValueChange={v => set("city", v)}>
+                        <SelectTrigger><SelectValue placeholder="Select your city" /></SelectTrigger>
+                        <SelectContent>
+                          {["Delhi", "Gurgaon", "Noida", "Pune", "Mumbai", "Bangalore", "Hyderabad"].map(c => (
+                            <SelectItem key={c} value={c}>{c}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FieldGroup>
+                    <FieldGroup label="Locality / Area" required>
+                      <Input
+                        placeholder="e.g., Kesnand, Baner, Wakad"
+                        value={formData.locality}
+                        onChange={e => set("locality", e.target.value)}
+                        disabled={!formData.city}
+                      />
+                    </FieldGroup>
                     <FieldGroup label="Society Name" required>
                       <div className="relative">
                         <Input
                           id="edit-society-name-input"
                           list="edit-society-suggestions"
-                          placeholder="Type your society name"
+                          placeholder={formData.locality ? "Type your society name" : "Please select a locality first"}
                           value={formData.societyName}
                           onChange={e => set("societyName", e.target.value)}
                           autoComplete="off"
+                          disabled={!formData.locality}
                         />
                         <datalist id="edit-society-suggestions">
                           {societies?.map(s => (
@@ -464,9 +486,6 @@ export default function SellEdit() {
                           ))}
                         </datalist>
                       </div>
-                    </FieldGroup>
-                    <FieldGroup label="City" required>
-                      <Input value={formData.city} onChange={e => set("city", e.target.value)} />
                     </FieldGroup>
                     <FieldGroup label="Tower / Wing">
                       <Input placeholder="e.g., Tower B, Wing A" value={formData.tower} onChange={e => set("tower", e.target.value)} />
@@ -581,7 +600,7 @@ export default function SellEdit() {
                         {[
                           `Business: ${formData.businessName}`,
                           `Category: ${formData.category}`,
-                          `Society: ${formData.societyName || "—"}${formData.city ? `, ${formData.city}` : ""}`,
+                          `Society: ${formData.societyName || "—"}${formData.locality ? `, ${formData.locality}` : ""}${formData.city ? `, ${formData.city}` : ""}`,
                           `WhatsApp: ${formData.whatsapp}`,
                           formData.priceRange ? `Pricing: ${formData.priceRange}` : null,
                         ].filter(Boolean).map((item, i) => (
