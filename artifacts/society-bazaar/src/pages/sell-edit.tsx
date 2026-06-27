@@ -20,14 +20,7 @@ import { ImageUpload } from "@/components/image-upload";
 import { Navbar } from "@/components/navbar";
 import type { Business, Society } from "@/lib/api";
 
-const CATEGORIES = [
-  "Food & Tiffin", "Bakery & Sweets", "Tuition & Classes",
-  "Fitness & Yoga", "Tailoring", "Beauty & Wellness", "Home Services", "Others",
-];
-
-const PRICE_RANGES = [
-  "Under ₹200", "₹200–₹500", "₹500–₹1000", "₹1000–₹2000", "Above ₹2000",
-];
+import { CATEGORIES, PRICE_RANGES } from "@/lib/constants";
 
 interface FormData {
   ownerName: string;
