@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { api, type Product } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { Navbar } from "@/components/navbar";
 
 const CATEGORY_IMAGES: Record<string, string> = {
   "Food & Tiffin": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80",
@@ -122,25 +123,18 @@ export default function BusinessDetail() {
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
-      {/* Navbar */}
-      <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
-        <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setLocation("/")}>
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <MapPin className="text-primary-foreground w-5 h-5" />
-            </div>
-            <span className="font-bold text-xl tracking-tight">Hust<span className="text-primary">ly</span></span>
-          </div>
+      <Navbar
+        rightContent={
           <button
             onClick={() => setLocation("/")}
             className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
-        </div>
-      </nav>
+        }
+      />
 
-      <main className="container mx-auto px-4 md:px-6 py-8 max-w-5xl">
+      <main className="container mx-auto px-4 md:px-6 py-8 pb-28 lg:pb-8 max-w-5xl">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main content */}
           <div className="lg:col-span-2">
@@ -361,8 +355,9 @@ export default function BusinessDetail() {
           {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-4">
-              {/* WhatsApp CTA */}
-              <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+              {/* WhatsApp CTA Desktop */}
+              <div className="hidden lg:block">
+                <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
                 <CardContent className="p-6">
                   <div className="w-14 h-14 bg-[#25D366]/10 rounded-full flex items-center justify-center mx-auto mb-4">
                     <MessageCircle className="w-7 h-7 text-[#25D366]" />
@@ -404,6 +399,7 @@ export default function BusinessDetail() {
                   )}
                 </CardContent>
               </Card>
+              </div>
 
               {/* Favourite toggle */}
               {user && (
@@ -434,6 +430,43 @@ export default function BusinessDetail() {
           </div>
         </div>
       </main>
+
+      {/* Mobile Floating CTA */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border/40 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.1)] z-40">
+        <div className="max-w-md mx-auto">
+          {selectedProduct && (
+            <p className="text-xs text-center mb-2 px-2 py-1 rounded-md bg-primary/10 text-primary font-medium line-clamp-1">
+              Selected: {selectedProduct.name}
+            </p>
+          )}
+          {trialExpired ? (
+            <button
+              disabled
+              className="w-full inline-flex items-center justify-center rounded-xl h-12 text-base font-bold bg-muted text-muted-foreground cursor-not-allowed shadow"
+            >
+              <Phone className="w-5 h-5 mr-2" /> Seller Unavailable
+            </button>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleWhatsApp()}
+                className="flex-1 inline-flex items-center justify-center rounded-xl h-12 text-base font-bold bg-[#25D366] text-white hover:bg-[#20bd5a] transition-colors shadow"
+              >
+                <MessageCircle className="w-5 h-5 mr-2" /> WhatsApp Now
+              </button>
+              {user && (
+                <button
+                  onClick={() => handleWhatsApp("repeat")}
+                  className="shrink-0 w-12 h-12 inline-flex items-center justify-center rounded-xl border border-border bg-background hover:bg-muted transition-colors shadow-sm"
+                  title="Order Again"
+                >
+                  <RefreshCw className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

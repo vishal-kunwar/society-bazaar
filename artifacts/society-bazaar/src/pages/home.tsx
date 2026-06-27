@@ -15,6 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { api, type BusinessRow, type DealRow, type FeedPostRow } from "@/lib/api";
+import { Navbar } from "@/components/navbar";
 
 
 const CATEGORY_IMAGES: Record<string, string> = {
@@ -222,36 +223,27 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background font-sans text-foreground selection:bg-primary/20 selection:text-primary">
       {/* Navbar */}
-      <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/90 backdrop-blur-md">
-        <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
-          {/* Logo & City Selector */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => setLocation("/")}>
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <MapPin className="text-primary-foreground w-5 h-5" />
-              </div>
-              <span className="font-extrabold text-xl tracking-tight hidden sm:inline-block">Hust<span className="text-primary">ly</span></span>
-            </div>
-            {city && (
-              <Select value={city} onValueChange={handleCitySelect}>
-                <SelectTrigger className="w-[120px] h-8 text-xs bg-muted/50 border-none">
-                  <SelectValue placeholder="City" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Delhi">Delhi</SelectItem>
-                  <SelectItem value="Gurgaon">Gurgaon</SelectItem>
-                  <SelectItem value="Noida">Noida</SelectItem>
-                  <SelectItem value="Pune">Pune</SelectItem>
-                  <SelectItem value="Mumbai">Mumbai</SelectItem>
-                  <SelectItem value="Bangalore">Bangalore</SelectItem>
-                  <SelectItem value="Hyderabad">Hyderabad</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-
-          {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-1">
+      <Navbar 
+        leftContent={
+          city && (
+            <Select value={city} onValueChange={handleCitySelect}>
+              <SelectTrigger className="w-[120px] h-8 text-xs bg-muted/50 border-none">
+                <SelectValue placeholder="City" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Delhi">Delhi</SelectItem>
+                <SelectItem value="Gurgaon">Gurgaon</SelectItem>
+                <SelectItem value="Noida">Noida</SelectItem>
+                <SelectItem value="Pune">Pune</SelectItem>
+                <SelectItem value="Mumbai">Mumbai</SelectItem>
+                <SelectItem value="Bangalore">Bangalore</SelectItem>
+                <SelectItem value="Hyderabad">Hyderabad</SelectItem>
+              </SelectContent>
+            </Select>
+          )
+        }
+        rightContent={
+          <>
             <Button
               variant="ghost"
               size="sm"
@@ -274,48 +266,37 @@ export default function Home() {
             >
               Seller Login
             </Button>
-          </div>
-
-          {/* Mobile hamburger */}
-          <button className="md:hidden p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-        </div>
-
-        {/* Mobile menu */}
-        {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="md:hidden border-t border-border/40 bg-background px-4 pb-4 pt-2 flex flex-col gap-2"
-          >
+          </>
+        }
+        mobileContent={
+          <>
             <Button
               variant="ghost"
               size="sm"
-              className="justify-start"
-              onClick={() => { document.getElementById("explore")?.scrollIntoView({ behavior: "smooth" }); setMobileMenuOpen(false); }}
+              className="justify-start w-full"
+              onClick={() => { document.getElementById("explore")?.scrollIntoView({ behavior: "smooth" }); }}
             >
               Explore
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="justify-start"
-              onClick={() => { setLocation("/seller-landing"); setMobileMenuOpen(false); }}
+              className="justify-start w-full"
+              onClick={() => { setLocation("/seller-landing"); }}
             >
               List Your Business
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="justify-start"
-              onClick={() => { setLocation("/sign-in"); setMobileMenuOpen(false); }}
+              className="justify-start w-full"
+              onClick={() => { setLocation("/sign-in"); }}
             >
               Seller Login
             </Button>
-          </motion.div>
-        )}
-      </nav>
+          </>
+        }
+      />
 
       {/* ── Hero ── */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-background pt-20 pb-28 border-b border-border/30">
@@ -618,6 +599,7 @@ export default function Home() {
           </div>
           <p className="text-center text-xs text-muted-foreground mt-8">
             © {new Date().getFullYear()} Hustly. Your neighbourhood marketplace.
+            <button onClick={() => setLocation("/admin")} className="opacity-0 hover:opacity-30 ml-2 cursor-default hover:cursor-pointer transition-opacity text-[10px]">admin</button>
           </p>
         </div>
       </footer>

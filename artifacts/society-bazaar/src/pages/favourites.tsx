@@ -6,6 +6,7 @@ import { MapPin, Heart, Star, TrendingUp, MessageCircle, LogOut, ArrowLeft } fro
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { api } from "@/lib/api";
+import { Navbar } from "@/components/navbar";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 const CATEGORY_IMAGES: Record<string, string> = {
@@ -45,16 +46,8 @@ export default function Favourites() {
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
-      <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
-        <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setLocation("/")}>
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <MapPin className="text-primary-foreground w-5 h-5" />
-            </div>
-            <span className="font-bold text-xl tracking-tight">
-              Hust<span className="text-primary">ly</span>
-            </span>
-          </div>
+      <Navbar
+        rightContent={
           <div className="flex items-center gap-2 border-l border-border/40 pl-2 ml-1">
             <Button variant="outline" size="sm" onClick={() => signOut({ redirectUrl: basePath || "/" })}>
               <LogOut className="w-4 h-4 mr-2" /> Sign Out
@@ -63,8 +56,13 @@ export default function Favourites() {
               <UserButton />
             </div>
           </div>
-        </div>
-      </nav>
+        }
+        mobileContent={
+          <Button variant="outline" size="sm" className="justify-start w-full text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => signOut({ redirectUrl: basePath || "/" })}>
+            <LogOut className="w-4 h-4 mr-2" /> Sign Out
+          </Button>
+        }
+      />
 
       <main className="container mx-auto px-4 md:px-6 py-10 max-w-5xl">
         <button onClick={() => setLocation("/")} className="flex items-center text-sm text-muted-foreground hover:text-foreground mb-6">

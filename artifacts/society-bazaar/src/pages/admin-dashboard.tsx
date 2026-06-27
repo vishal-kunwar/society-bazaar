@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useClerk, UserButton } from "@clerk/react";
 import { motion } from "framer-motion";
 import { MapPin, CheckCircle2, XCircle, Clock, TrendingUp, Building2, Users, LogOut, ShieldCheck, IndianRupee } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { Navbar } from "@/components/navbar";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 const STATUS_COLORS: Record<string, string> = {
@@ -21,9 +21,17 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function AdminDashboard() {
   const [, setLocation] = useLocation();
-  const { signOut } = useClerk();
-  const { toast } = useToast();
   const qc = useQueryClient();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    try {
+      await fetch(`${import.meta.env.VITE_API_URL || "/api"}/admin/logout`, { method: "POST", credentials: "include" });
+    } catch (err) {}
+    localStorage.removeItem("admin_token"); // for backwards compatibility
+    setLocation("/admin-login");
+  };
+
   const [activeTab, setActiveTab] = useState("pending");
 
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -34,6 +42,7 @@ export default function AdminDashboard() {
   const { data: businesses, isLoading: bizLoading } = useQuery({
     queryKey: ["admin-businesses", activeTab],
     queryFn: () => api.admin.businesses(activeTab),
+    enabled: activeTab !== "payments",
   });
 
   const updateStatus = useMutation({
@@ -70,29 +79,30 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
-      <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
-        <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setLocation("/")}>
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <MapPin className="text-primary-foreground w-5 h-5" />
-            </div>
-            <span className="font-bold text-xl tracking-tight">Hust<span className="text-primary">ly</span></span>
-          </div>
-          <div className="flex items-center gap-3">
+      <Navbar
+        rightContent={
+          <>
             <Badge className="bg-primary/10 text-primary border-primary/20 font-semibold">
               <ShieldCheck className="w-3.5 h-3.5 mr-1" />Admin
             </Badge>
             <div className="flex items-center gap-2 border-l border-border/40 pl-2 ml-1">
-              <Button variant="outline" size="sm" onClick={() => signOut({ redirectUrl: basePath || "/" })}>
+              <Button variant="outline" size="sm" onClick={handleSignOut}>
                 <LogOut className="w-4 h-4 mr-2" />Sign Out
               </Button>
-              <div className="h-8 w-8 flex items-center justify-center">
-                <UserButton />
-              </div>
             </div>
-          </div>
-        </div>
-      </nav>
+          </>
+        }
+        mobileContent={
+          <>
+            <Badge className="bg-primary/10 text-primary border-primary/20 font-semibold justify-center py-1 mb-2">
+              <ShieldCheck className="w-3.5 h-3.5 mr-1" />Admin Session
+            </Badge>
+            <Button variant="outline" size="sm" className="justify-start w-full text-red-600 hover:text-red-700 hover:bg-red-50" onClick={handleSignOut}>
+              <LogOut className="w-4 h-4 mr-2" />Sign Out
+            </Button>
+          </>
+        }
+      />
 
       <main className="container mx-auto px-4 md:px-6 py-10 max-w-6xl">
         <div className="mb-10">
@@ -147,33 +157,37 @@ export default function AdminDashboard() {
             {!paymentsLoading && (!payments || payments.length === 0) && (
               <div className="text-center py-16 text-muted-foreground">No pending payments.</div>
             )}
-            {!paymentsLoading && payments?.map((payment: any) => (
-              <Card key={payment.id} className="mb-4 border-border/50">
-                <CardContent className="p-5 flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold">Amount: ₹{payment.amount}</h3>
-                    <p className="text-sm text-muted-foreground">UTR: {payment.utrNumber}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Submitted: {new Date(payment.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  {payment.status === "pending" ? (
-                    <Button
-                      size="sm"
-                      className="bg-green-600 hover:bg-green-700"
-                      disabled={approvePayment.isPending}
-                      onClick={() => approvePayment.mutate(payment.id)}
-                    >
-                      <IndianRupee className="w-4 h-4 mr-1" /> Approve Payment
-                    </Button>
-                  ) : (
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">
-                      Approved
-                    </Badge>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+            {!paymentsLoading && payments?.map((row: any) => {
+              const { payment, business } = row;
+              return (
+                <Card key={payment.id} className="mb-4 border-border/50">
+                  <CardContent className="p-5 flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-lg mb-1">{business?.businessName ?? "Unknown Business"}</h3>
+                      <h4 className="font-semibold text-primary">Amount: ₹{payment.amount}</h4>
+                      <p className="text-sm text-muted-foreground mt-1">UTR: <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-foreground">{payment.utrNumber}</span></p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Submitted: {new Date(payment.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    {payment.status === "pending" ? (
+                      <Button
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700"
+                        disabled={approvePayment.isPending}
+                        onClick={() => approvePayment.mutate(payment.id)}
+                      >
+                        <IndianRupee className="w-4 h-4 mr-1" /> Approve Payment
+                      </Button>
+                    ) : (
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        Approved
+                      </Badge>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </TabsContent>
 
           {["pending", "approved", "rejected"].map(tab => (

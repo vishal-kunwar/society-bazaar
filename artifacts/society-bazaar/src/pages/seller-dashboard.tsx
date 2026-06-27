@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { Navbar } from "@/components/navbar";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -125,8 +126,8 @@ function UpgradeModal({ isOpen, onClose, businessId }: { isOpen: boolean; onClos
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="bg-muted p-4 rounded-lg flex flex-col items-center justify-center space-y-2">
-            <div className="w-48 h-48 bg-white flex items-center justify-center border-4 border-primary">
-              <span className="font-bold text-xl text-primary text-center">UPI QR Code Placeholder</span>
+            <div className="w-48 h-48 bg-white flex items-center justify-center border-4 border-primary overflow-hidden">
+              <img src={`${basePath}/QR.jpeg`} alt="UPI QR Code" className="w-full h-full object-contain" />
             </div>
             <p className="text-sm font-medium">Scan to pay ₹199</p>
             <p className="text-xs text-muted-foreground">UPI ID: societybazaar@okicici</p>
@@ -327,15 +328,9 @@ export default function SellerDashboard() {
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
       {/* Navbar */}
-      <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
-        <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setLocation("/")}>
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <MapPin className="text-primary-foreground w-5 h-5" />
-            </div>
-            <span className="font-bold text-xl tracking-tight">Hust<span className="text-primary">ly</span></span>
-          </div>
-          <div className="flex items-center gap-3">
+      <Navbar
+        rightContent={
+          <>
             <Button variant="outline" size="sm" onClick={() => setLocation("/sell")}>
               <Plus className="w-4 h-4 mr-1" />New Listing
             </Button>
@@ -347,9 +342,19 @@ export default function SellerDashboard() {
                 <UserButton />
               </div>
             </div>
-          </div>
-        </div>
-      </nav>
+          </>
+        }
+        mobileContent={
+          <>
+            <Button variant="outline" size="sm" className="justify-start w-full" onClick={() => setLocation("/sell")}>
+              <Plus className="w-4 h-4 mr-1" />New Listing
+            </Button>
+            <Button variant="outline" size="sm" className="justify-start w-full text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => signOut({ redirectUrl: basePath || "/" })}>
+              <LogOut className="w-4 h-4 mr-1" />Sign Out
+            </Button>
+          </>
+        }
+      />
 
       <main className="container mx-auto px-4 md:px-6 py-10 max-w-5xl">
         {/* Header */}

@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, integer, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, integer, pgEnum, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { societiesTable } from "./societies";
@@ -27,7 +27,7 @@ export const businessesTable = pgTable("businesses", {
   category: businessCategoryEnum("category").notNull(),
   phone: text("phone").notNull(),
   whatsapp: text("whatsapp").notNull(),
-  description: text("description").notNull(),
+  description: varchar("description", { length: 1000 }).notNull(),
   imageUrl: text("image_url").notNull().default(""),
   status: businessStatusEnum("status").notNull().default("pending"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -45,7 +45,7 @@ export const businessesTable = pgTable("businesses", {
   instagram: text("instagram"),
   website: text("website"),
   priceRange: text("price_range"),
-  servicesOffered: text("services_offered"),
+  servicesOffered: varchar("services_offered", { length: 500 }),
   coverImageUrl: text("cover_image_url"),
 });
 

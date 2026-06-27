@@ -9,7 +9,10 @@ import type { Request, Response } from "express";
 const router = Router();
 
 router.get("/feed", async (req: Request, res: Response) => {
-  const { societyId } = req.query;
+  const { societyId, limit, offset } = req.query;
+  const parsedLimit = limit ? Math.min(Number(limit), 100) : 20;
+  const parsedOffset = offset ? Number(offset) : 0;
+
   const rows = await db
     .select({ post: feedPostsTable, business: businessesTable, society: societiesTable })
     .from(feedPostsTable)
@@ -22,7 +25,8 @@ router.get("/feed", async (req: Request, res: Response) => {
       ),
     )
     .orderBy(desc(feedPostsTable.createdAt))
-    .limit(20);
+    .limit(parsedLimit)
+    .offset(parsedOffset);
   res.json(rows);
 });
 

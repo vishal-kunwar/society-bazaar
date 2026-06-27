@@ -1,9 +1,11 @@
 const BASE = "/api";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = { "Content-Type": "application/json", ...(options?.headers as any ?? {}) };
+  
   const res = await fetch(`${BASE}${path}`, {
     credentials: "include",
-    headers: { "Content-Type": "application/json", ...(options?.headers ?? {}) },
+    headers,
     ...options,
   });
   if (!res.ok) {
@@ -213,6 +215,7 @@ export const api = {
     seller: () => request<SellerAnalytics>("/analytics/seller"),
   },
   admin: {
+    login: (password: string) => request<{ token: string }>("/admin/login", { method: "POST", body: JSON.stringify({ password }) }),
     check: () => request<{ isAdmin: boolean }>("/admin/check"),
     stats: () => request<AdminStats>("/admin/stats"),
     businesses: (status?: string) => {

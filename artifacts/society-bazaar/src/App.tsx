@@ -12,6 +12,7 @@ import Sell from "@/pages/sell";
 import BusinessDetail from "@/pages/business-detail";
 import SellerDashboard from "@/pages/seller-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
+import AdminLogin from "@/pages/admin-login";
 import Favourites from "@/pages/favourites";
 import SellerProducts from "@/pages/seller-products";
 import SellEdit from "@/pages/sell-edit";
@@ -134,30 +135,28 @@ function RedirectToHome() {
 }
 
 function AdminProtectedRoute({ component: Component }: { component: React.ComponentType }) {
-  const { data, isLoading } = useQuery({
+  const [, setLocation] = useLocation();
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["admin-check"],
     queryFn: () => api.admin.check(),
     retry: false,
   });
 
-  return (
-    <>
-      <Show when="signed-in">
-        {isLoading ? (
-          <div className="flex min-h-screen items-center justify-center bg-background">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        ) : data?.isAdmin ? (
-          <Component />
-        ) : (
-          <RedirectToHome />
-        )}
-      </Show>
-      <Show when="signed-out">
-        <RedirectToSignIn />
-      </Show>
-    </>
-  );
+  useEffect(() => {
+    if (!isLoading && (isError || data?.isAdmin === false)) {
+      setLocation("/admin-login");
+    }
+  }, [isLoading, isError, data, setLocation]);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  return data?.isAdmin ? <Component /> : null;
 }
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -213,6 +212,7 @@ function ClerkProviderWithRoutes() {
             <Route path="/business/:id" component={BusinessDetail} />
             <Route path="/dashboard/products/:businessId" component={() => <ProtectedRoute component={SellerProducts} />} />
             <Route path="/dashboard" component={() => <ProtectedRoute component={SellerDashboard} />} />
+            <Route path="/admin-login" component={AdminLogin} />
             <Route path="/admin" component={() => <AdminProtectedRoute component={AdminDashboard} />} />
             <Route path="/favourites" component={() => <ProtectedRoute component={Favourites} />} />
             <Route component={NotFound} />

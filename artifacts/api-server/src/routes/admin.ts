@@ -2,28 +2,56 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { businessesTable, societiesTable, leadsTable, reviewsTable, paymentsTable } from "@workspace/db";
 import { eq, desc, sql, count } from "drizzle-orm";
-import { requireAdmin, isClerkEnabled, ADMIN_USER_IDS } from "../middlewares/requireAuth";
-import { getAuth } from "@clerk/express";
+import { requireAdmin } from "../middlewares/requireAdmin";
 import type { Request, Response } from "express";
+import jwt from "jsonwebtoken";
+
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!ADMIN_PASSWORD || !JWT_SECRET) {
+  throw new Error(
+    "FATAL: ADMIN_PASSWORD and JWT_SECRET environment variables must be set. " +
+    "The server will not start without them."
+  );
+}
 
 const router = Router();
 
-router.get("/admin/check", async (req: Request, res: Response) => {
-  if (!isClerkEnabled) {
-    res.json({ isAdmin: true });
+router.post("/admin/login", async (req: Request, res: Response) => {
+  const { password } = req.body;
+  if (password === ADMIN_PASSWORD) {
+    const token = jwt.sign({ role: "admin" }, JWT_SECRET, { expiresIn: "24h" });
+    res.cookie("admin_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    });
+    res.json({ success: true });
     return;
   }
-  const auth = getAuth(req);
-  const userId = auth?.userId;
-  if (!userId) {
+  res.status(401).json({ error: "Invalid password" });
+});
+
+router.post("/admin/logout", async (req: Request, res: Response) => {
+  res.clearCookie("admin_token");
+  res.json({ success: true });
+});
+
+router.get("/admin/check", async (req: Request, res: Response) => {
+  const token = req.cookies.admin_token;
+  if (!token) {
     res.json({ isAdmin: false });
     return;
   }
-  const isAdmin = ADMIN_USER_IDS.includes(userId);
-  res.json({ isAdmin });
+  try {
+    jwt.verify(token, JWT_SECRET);
+    res.json({ isAdmin: true });
+  } catch (err) {
+    res.json({ isAdmin: false });
+  }
 });
-
-
 router.get("/admin/stats", requireAdmin, async (_req: Request, res: Response) => {
   const [totals] = await db
     .select({

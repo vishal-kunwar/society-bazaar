@@ -21,7 +21,14 @@ const storage = multer.diskStorage({
     cb(null, UPLOADS_DIR);
   },
   filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname) || ".jpg";
+    // Map mime types to safe extensions, ignoring user-supplied filenames entirely
+    const extMap: Record<string, string> = {
+      "image/jpeg": ".jpg",
+      "image/png": ".png",
+      "image/webp": ".webp",
+      "image/gif": ".gif"
+    };
+    const ext = extMap[file.mimetype] || ".jpg";
     const uniqueName = `${Date.now()}-${crypto.randomBytes(6).toString("hex")}${ext}`;
     cb(null, uniqueName);
   },

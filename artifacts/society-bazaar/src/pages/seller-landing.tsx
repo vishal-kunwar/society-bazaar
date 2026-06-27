@@ -8,6 +8,7 @@ import {
 import { useUser } from "@clerk/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Navbar } from "@/components/navbar";
 
 const FAQ_ITEMS = [
   {
@@ -48,25 +49,29 @@ export default function SellerLanding() {
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground selection:bg-primary/20 selection:text-primary">
-      {/* Navbar */}
-      <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/90 backdrop-blur-md">
-        <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setLocation("/")}>
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <MapPin className="text-primary-foreground w-5 h-5" />
-            </div>
-            <span className="font-extrabold text-xl tracking-tight">Hust<span className="text-primary">ly</span></span>
-            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold ml-1">Sellers</span>
-          </div>
-
-          <div className="flex items-center gap-4">
+      <Navbar
+        leftContent={
+          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold ml-1 hidden sm:inline-block">Sellers</span>
+        }
+        rightContent={
+          <>
             <Button variant="ghost" size="sm" onClick={() => setLocation("/")}>Explore Marketplace</Button>
             <Button size="sm" onClick={handleSellerCTA}>
               {isSignedIn ? "My Dashboard" : "Start Your Hustle"}
             </Button>
-          </div>
-        </div>
-      </nav>
+          </>
+        }
+        mobileContent={
+          <>
+            <Button variant="ghost" size="sm" className="justify-start w-full" onClick={() => setLocation("/")}>
+              Explore Marketplace
+            </Button>
+            <Button size="sm" className="justify-start w-full" onClick={handleSellerCTA}>
+              {isSignedIn ? "My Dashboard" : "Start Your Hustle"}
+            </Button>
+          </>
+        }
+      />
 
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-background pt-20 pb-28 border-b border-border/30">
@@ -253,6 +258,7 @@ export default function SellerLanding() {
           </div>
           <p className="text-sm text-muted-foreground mt-4">
             © {new Date().getFullYear()} Hustly. Your neighbourhood marketplace.
+            <button onClick={() => setLocation("/admin")} className="opacity-0 hover:opacity-30 ml-2 cursor-default hover:cursor-pointer transition-opacity text-[10px]">admin</button>
           </p>
         </div>
       </footer>

@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, integer, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { businessesTable } from "./businesses";
@@ -9,7 +9,7 @@ export const reviewsTable = pgTable("reviews", {
   clerkUserId: text("clerk_user_id").notNull(),
   reviewerName: text("reviewer_name").notNull(),
   rating: integer("rating").notNull(),
-  comment: text("comment").notNull(),
+  comment: varchar("comment", { length: 500 }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

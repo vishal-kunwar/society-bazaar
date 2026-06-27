@@ -9,7 +9,9 @@ import type { Request, Response } from "express";
 const router = Router();
 
 router.get("/businesses", async (req: Request, res: Response) => {
-  const { societyId, category, city, locality } = req.query;
+  const { societyId, category, city, locality, limit, offset } = req.query;
+  const parsedLimit = limit ? Math.min(Number(limit), 100) : 50;
+  const parsedOffset = offset ? Number(offset) : 0;
 
   const rows = await db
     .select({
@@ -33,7 +35,9 @@ router.get("/businesses", async (req: Request, res: Response) => {
       ),
     )
     .groupBy(businessesTable.id, societiesTable.id)
-    .orderBy(desc(businessesTable.createdAt));
+    .orderBy(desc(businessesTable.createdAt))
+    .limit(parsedLimit)
+    .offset(parsedOffset);
 
   const enrichedRows = rows.map(row => {
     const isPro = row.business.subscriptionPlan === "pro" && row.business.proValidUntil && new Date(row.business.proValidUntil) > new Date();
@@ -93,100 +97,80 @@ router.get("/businesses/:id", async (req: Request, res: Response) => {
   res.json({ ...row, business: b, trialExpired, reviews });
 });
 
-router.post("/businesses", requireAuth, async (req: Request, res: Response) => {
+import { insertBusinessSchema } from "@workspace/db/schema";
+import { ZodError } from "zod/v4";
+
+router.post("/businesses", requireAuth, async (req: Request, res: Response, next) => {
   const { userId } = req as AuthedRequest;
-  const {
-    businessName, ownerName, societyId, category, phone, whatsapp, description,
-    email, yearsInBusiness, tower, flatNumber, city, alternatePhone,
-    instagram, website, priceRange, servicesOffered, imageUrl, coverImageUrl,
-  } = req.body;
+  
+  try {
+    const parsed = insertBusinessSchema.parse({
+      ...req.body,
+      societyId: Number(req.body.societyId),
+      yearsInBusiness: req.body.yearsInBusiness ? Number(req.body.yearsInBusiness) : undefined,
+    });
 
-  if (!businessName || !ownerName || !societyId || !category || !phone || !whatsapp || !description) {
-    res.status(400).json({ error: "Required fields missing" });
-    return;
+    const [business] = await db
+      .insert(businessesTable)
+      .values({
+        clerkUserId: userId,
+        status: "pending",
+        ...parsed,
+      })
+      .returning();
+
+    res.status(201).json(business);
+  } catch (err: any) {
+    if (err instanceof ZodError) {
+      res.status(400).json({ error: err.errors });
+      return;
+    }
+    next(err);
   }
-
-  const [business] = await db
-    .insert(businessesTable)
-    .values({
-      clerkUserId: userId,
-      businessName,
-      ownerName,
-      societyId: Number(societyId),
-      category,
-      phone,
-      whatsapp,
-      description,
-      imageUrl: imageUrl || "",
-      status: "pending",
-      email: email || null,
-      yearsInBusiness: yearsInBusiness ? Number(yearsInBusiness) : null,
-      tower: tower || null,
-      flatNumber: flatNumber || null,
-      city: city || null,
-      alternatePhone: alternatePhone || null,
-      instagram: instagram || null,
-      website: website || null,
-      priceRange: priceRange || null,
-      servicesOffered: servicesOffered || null,
-      coverImageUrl: coverImageUrl || null,
-    })
-    .returning();
-
-  res.status(201).json(business);
 });
 
-router.put("/businesses/:id", requireAuth, async (req: Request, res: Response) => {
+router.put("/businesses/:id", requireAuth, async (req: Request, res: Response, next) => {
   const { userId } = req as AuthedRequest;
   const id = Number(req.params.id);
-  const {
-    businessName, ownerName, societyId, category, phone, whatsapp, description,
-    email, yearsInBusiness, tower, flatNumber, city, alternatePhone,
-    instagram, website, priceRange, servicesOffered, imageUrl, coverImageUrl,
-  } = req.body;
 
-  const [existing] = await db
-    .select()
-    .from(businessesTable)
-    .where(and(eq(businessesTable.id, id), eq(businessesTable.clerkUserId, userId)))
-    .limit(1);
+  try {
+    const parsed = insertBusinessSchema.parse({
+      ...req.body,
+      societyId: Number(req.body.societyId),
+      yearsInBusiness: req.body.yearsInBusiness ? Number(req.body.yearsInBusiness) : undefined,
+    });
 
-  if (!existing) {
-    res.status(404).json({ error: "Business not found or not authorized" });
-    return;
+    const [existing] = await db
+      .select()
+      .from(businessesTable)
+      .where(and(eq(businessesTable.id, id), eq(businessesTable.clerkUserId, userId)))
+      .limit(1);
+
+    if (!existing) {
+      res.status(404).json({ error: "Business not found or not authorized" });
+      return;
+    }
+
+    const newStatus = existing.status === "approved" ? "pending" : existing.status;
+
+    const [updated] = await db
+      .update(businessesTable)
+      .set({
+        ...parsed,
+        status: newStatus,
+        imageUrl: parsed.imageUrl || existing.imageUrl,
+      })
+      .where(eq(businessesTable.id, id))
+      .returning();
+
+    res.json(updated);
+  } catch (err: any) {
+    if (err instanceof ZodError) {
+      res.status(400).json({ error: err.errors });
+      return;
+    }
+    next(err);
   }
-
-  // If the listing was approved, reset to pending so admin can re-review changes
-  const newStatus = existing.status === "approved" ? "pending" : existing.status;
-
-  const [updated] = await db
-    .update(businessesTable)
-    .set({
-      businessName,
-      ownerName,
-      societyId: Number(societyId),
-      category,
-      phone,
-      whatsapp,
-      description,
-      status: newStatus,
-      email: email || null,
-      yearsInBusiness: yearsInBusiness ? Number(yearsInBusiness) : null,
-      tower: tower || null,
-      flatNumber: flatNumber || null,
-      city: city || null,
-      alternatePhone: alternatePhone || null,
-      instagram: instagram || null,
-      website: website || null,
-      priceRange: priceRange || null,
-      servicesOffered: servicesOffered || null,
-      imageUrl: imageUrl || existing.imageUrl,
-      coverImageUrl: coverImageUrl || null,
-    })
-    .where(eq(businessesTable.id, id))
-    .returning();
-
-  res.json(updated);
 });
 
 router.patch("/businesses/:id/pause", requireAuth, async (req: Request, res: Response) => {

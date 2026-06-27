@@ -17,6 +17,7 @@ import {
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { ImageUpload } from "@/components/image-upload";
+import { Navbar } from "@/components/navbar";
 import type { Business, Society } from "@/lib/api";
 
 const CATEGORIES = [
@@ -358,20 +359,13 @@ export default function SellEdit() {
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
-      {/* Navbar */}
-      <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
-        <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setLocation("/")}>
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <MapPin className="text-primary-foreground w-5 h-5" />
-            </div>
-            <span className="font-extrabold text-xl tracking-tight">Hust<span className="text-primary">ly</span></span>
-          </div>
+      <Navbar
+        rightContent={
           <button onClick={() => setLocation("/dashboard")} className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-4 h-4 mr-1" />Back to Dashboard
           </button>
-        </div>
-      </nav>
+        }
+      />
 
       {/* Header */}
       <div className="bg-gradient-to-b from-primary/8 to-background border-b border-border/30 py-8">
