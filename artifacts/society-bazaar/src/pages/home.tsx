@@ -110,6 +110,12 @@ function BusinessCard({ row, isFav, onToggleFav, favPending, onWhatsApp, onClick
           src={imgUrl}
           alt={biz.businessName}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          onError={(e) => {
+            const fallback = CATEGORY_IMAGES[biz.category] || CATEGORY_IMAGES["Others"];
+            if (e.currentTarget.src !== fallback) {
+              e.currentTarget.src = fallback;
+            }
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
         <div className="absolute top-2 left-2 flex gap-1.5 flex-wrap">

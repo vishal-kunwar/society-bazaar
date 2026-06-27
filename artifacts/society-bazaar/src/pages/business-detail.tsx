@@ -152,7 +152,17 @@ export default function BusinessDetail() {
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
               {/* Hero image */}
               <div className="relative rounded-2xl overflow-hidden aspect-video mb-6 bg-muted">
-                <img src={imgUrl} alt={biz.businessName} className="w-full h-full object-cover" />
+                <img
+                  src={imgUrl}
+                  alt={biz.businessName}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const fallback = CATEGORY_IMAGES[biz.category] || CATEGORY_IMAGES["Others"];
+                    if (e.currentTarget.src !== fallback) {
+                      e.currentTarget.src = fallback;
+                    }
+                  }}
+                />
                 {isNew && (
                   <span className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs font-bold px-2.5 py-1 rounded-full shadow">
                     ✨ New
