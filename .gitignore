@@ -55,5 +55,6 @@ Thumbs.db
 .env.development
 .env.production
 .env.*
+!.env.example
 .replit-config/
 
