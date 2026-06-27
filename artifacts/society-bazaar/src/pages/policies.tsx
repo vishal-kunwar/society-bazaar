@@ -381,7 +381,7 @@ export function ContactPolicy() {
           {"Please contact us through:"}
         </p>
         <p key={7} className="leading-relaxed mb-4">
-          {"Email: support.hustly@gmail.com (Replace with your official email when available.)"}
+          {"Email: support.hustly@gmail.com"}
         </p>
         <p key={8} className="leading-relaxed mb-4">
           {"Response Time"}
