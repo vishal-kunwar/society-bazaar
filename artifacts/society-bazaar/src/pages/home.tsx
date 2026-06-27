@@ -16,6 +16,7 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { api, type BusinessRow, type DealRow, type FeedPostRow } from "@/lib/api";
 import { Navbar } from "@/components/navbar";
+import { useUser, UserButton } from "@clerk/react";
 
 
 const CATEGORY_IMAGES: Record<string, string> = {
@@ -146,6 +147,7 @@ function BusinessCard({ row, isFav, onToggleFav, favPending, onWhatsApp, onClick
 }
 
 export default function Home() {
+  const { isSignedIn } = useUser();
   const [, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedLocality, setSelectedLocality] = useState<string>("all");
@@ -258,14 +260,29 @@ export default function Home() {
             >
               List Your Business
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="ml-2"
-              onClick={() => setLocation("/sign-in")}
-            >
-              Seller Login
-            </Button>
+            {isSignedIn ? (
+              <div className="flex items-center gap-2 border-l border-border/40 pl-2 ml-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocation("/dashboard")}
+                >
+                  Dashboard
+                </Button>
+                <div className="h-8 w-8 flex items-center justify-center">
+                  <UserButton />
+                </div>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="ml-2"
+                onClick={() => setLocation("/sign-in")}
+              >
+                Seller Login
+              </Button>
+            )}
           </>
         }
         mobileContent={
@@ -286,14 +303,25 @@ export default function Home() {
             >
               List Your Business
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="justify-start w-full"
-              onClick={() => { setLocation("/sign-in"); }}
-            >
-              Seller Login
-            </Button>
+            {isSignedIn ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="justify-start w-full"
+                onClick={() => { setLocation("/dashboard"); }}
+              >
+                Dashboard
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="justify-start w-full"
+                onClick={() => { setLocation("/sign-in"); }}
+              >
+                Seller Login
+              </Button>
+            )}
           </>
         }
       />

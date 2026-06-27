@@ -127,10 +127,10 @@ function UpgradeModal({ isOpen, onClose, businessId }: { isOpen: boolean; onClos
         <CardContent className="space-y-4">
           <div className="bg-muted p-4 rounded-lg flex flex-col items-center justify-center space-y-2">
             <div className="w-48 h-48 bg-white flex items-center justify-center border-4 border-primary overflow-hidden">
-              <img src={`${basePath}/QR.jpeg`} alt="UPI QR Code" className="w-full h-full object-contain" />
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi%3A%2F%2Fpay%3Fpa%3Dkotakupivk%40axl%26pn%3DHustly%26am%3D199%26cu%3DINR" alt="UPI QR Code" className="w-full h-full p-2 object-contain" />
             </div>
             <p className="text-sm font-medium">Scan to pay ₹199</p>
-            <p className="text-xs text-muted-foreground">UPI ID: societybazaar@okicici</p>
+            <p className="text-xs text-muted-foreground">UPI ID: kotakupivk@axl</p>
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Submit UTR Number</label>
