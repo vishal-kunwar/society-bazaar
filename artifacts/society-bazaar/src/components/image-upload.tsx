@@ -82,9 +82,9 @@ export function ImageUpload({
   if (value) {
     return (
       <div className={`space-y-2 ${className}`}>
-        <div className="flex items-end gap-3">
+        <div className={`flex ${variant === "square" ? "items-end" : "flex-col"} gap-3`}>
           <div
-            className={`${variant === "wide" ? "w-full h-32" : (variant === "square-full" ? "w-full aspect-square" : "w-20 h-20")} rounded-xl overflow-hidden border border-border bg-muted relative group`}
+            className={`${variant === "wide" ? "w-full h-32" : (variant === "square-full" ? "w-full aspect-square" : "w-20 h-20")} rounded-xl overflow-hidden border border-border bg-muted relative`}
           >
             <img
               src={value}
@@ -94,27 +94,27 @@ export function ImageUpload({
                 (e.currentTarget as HTMLImageElement).style.display = "none";
               }}
             />
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                className="h-7 text-xs"
-                onClick={() => inputRef.current?.click()}
-                disabled={uploading}
-              >
-                Replace
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                className="h-7 text-xs text-red-500"
-                onClick={clearImage}
-              >
-                <X className="w-3 h-3" />
-              </Button>
-            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs"
+              onClick={() => inputRef.current?.click()}
+              disabled={uploading}
+            >
+              Replace
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs text-red-500 hover:text-red-600 hover:bg-red-50"
+              onClick={clearImage}
+            >
+              Remove
+            </Button>
           </div>
         </div>
         <input
