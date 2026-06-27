@@ -106,5 +106,9 @@ export const societies = [
 ];
 
 export const categoriesList = [
-  "Food & Tiffin", "Bakery & Sweets", "Tuition & Classes", "Fitness & Yoga", "Tailoring", "Beauty & Wellness", "Home Services", "Others"
+  "Food & Tiffin", "Bakery & Sweets", "Retail & Daily Needs", "Clothing & Fashion",
+  "Beauty & Wellness", "Salon at Home", "Fitness, Yoga & Zumba", "Tuition & Classes",
+  "Arts, Music & Hobby Classes", "Tailoring & Boutique", "Home Services", "Repairs & Maintenance",
+  "Pet Care", "Photography & Events", "Gifts & Handmade", "Tech & Digital Services",
+  "Travel & Transport", "Others"
 ];

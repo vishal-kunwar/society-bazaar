@@ -1,10 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import {
-  Menu, X, Search, MapPin, Utensils, Cake, BookOpen, Dumbbell,
-  Scissors, Sparkles, Wrench, MoreHorizontal, Star, MessageCircle,
-  TrendingUp, Heart, Flame, Clock, Bell,
-} from "lucide-react";
+import { Menu, X, Search, MapPin, Utensils, Cake, BookOpen, Dumbbell, Scissors, Sparkles, Wrench, MoreHorizontal, Star, MessageCircle, TrendingUp, Heart, Flame, Clock, Bell, ShoppingBag, Shirt, Palette, Hammer, Dog, Camera, Gift, Monitor, Car, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,23 +18,44 @@ import { useUser, UserButton } from "@clerk/react";
 const CATEGORY_IMAGES: Record<string, string> = {
   "Food & Tiffin": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80",
   "Bakery & Sweets": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&q=80",
-  "Tuition & Classes": "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=600&q=80",
-  "Fitness & Yoga": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&q=80",
-  "Tailoring": "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=600&q=80",
+  "Retail & Daily Needs": "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=600&q=80",
+  "Clothing & Fashion": "https://images.unsplash.com/photo-1489987707023-afc31e4198fa?w=600&q=80",
   "Beauty & Wellness": "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&q=80",
+  "Salon at Home": "https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=600&q=80",
+  "Fitness, Yoga & Zumba": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&q=80",
+  "Tuition & Classes": "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=600&q=80",
+  "Arts, Music & Hobby Classes": "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600&q=80",
+  "Tailoring & Boutique": "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=600&q=80",
   "Home Services": "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&q=80",
+  "Repairs & Maintenance": "https://images.unsplash.com/photo-1416886885375-9e623dc58778?w=600&q=80",
+  "Pet Care": "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=600&q=80",
+  "Photography & Events": "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=600&q=80",
+  "Gifts & Handmade": "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600&q=80",
+  "Tech & Digital Services": "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&q=80",
+  "Travel & Transport": "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=600&q=80",
   "Others": "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&q=80",
 };
+
 
 const CATEGORIES = [
   { name: "Food & Tiffin", icon: Utensils },
   { name: "Bakery & Sweets", icon: Cake },
-  { name: "Tuition & Classes", icon: BookOpen },
-  { name: "Fitness & Yoga", icon: Dumbbell },
-  { name: "Tailoring", icon: Scissors },
+  { name: "Retail & Daily Needs", icon: ShoppingBag },
+  { name: "Clothing & Fashion", icon: Shirt },
   { name: "Beauty & Wellness", icon: Sparkles },
+  { name: "Salon at Home", icon: Scissors },
+  { name: "Fitness, Yoga & Zumba", icon: Dumbbell },
+  { name: "Tuition & Classes", icon: BookOpen },
+  { name: "Arts, Music & Hobby Classes", icon: Palette },
+  { name: "Tailoring & Boutique", icon: Scissors },
   { name: "Home Services", icon: Wrench },
-  { name: "Others", icon: MoreHorizontal },
+  { name: "Repairs & Maintenance", icon: Hammer },
+  { name: "Pet Care", icon: Dog },
+  { name: "Photography & Events", icon: Camera },
+  { name: "Gifts & Handmade", icon: Gift },
+  { name: "Tech & Digital Services", icon: Monitor },
+  { name: "Travel & Transport", icon: Car },
+  { name: "Others", icon: Briefcase }
 ];
 
 function getTimeRemaining(expiresAt: string) {
@@ -109,9 +126,8 @@ function BusinessCard({ row, isFav, onToggleFav, favPending, onWhatsApp, onClick
           <button
             onClick={(e) => { e.stopPropagation(); onToggleFav(biz.id); }}
             disabled={favPending}
-            className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all ${
-              isFav ? "bg-red-500" : "bg-white/90 hover:bg-white"
-            }`}
+            className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all ${isFav ? "bg-red-500" : "bg-white/90 hover:bg-white"
+              }`}
           >
             <Heart className={`w-4 h-4 ${isFav ? "text-white fill-white" : "text-gray-500"}`} />
           </button>
@@ -174,8 +190,8 @@ export default function Home() {
     setSelectedSociety("all");
   };
 
-  const { data: allSocietiesInCity } = useQuery({ 
-    queryKey: ["societies-city", city], 
+  const { data: allSocietiesInCity } = useQuery({
+    queryKey: ["societies-city", city],
     queryFn: () => api.societies.list(city || undefined),
     enabled: !!city
   });
@@ -205,7 +221,7 @@ export default function Home() {
   });
 
   const handleWhatsApp = useCallback((businessId: number, whatsapp: string) => {
-    api.leads.track(businessId).catch(() => {});
+    api.leads.track(businessId).catch(() => { });
     const msg = encodeURIComponent("Hi, I found your business on Hustly and would like to know more.");
     window.open(`https://wa.me/${whatsapp.replace(/\D/g, "")}?text=${msg}`, "_blank");
   }, []);
@@ -225,7 +241,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background font-sans text-foreground selection:bg-primary/20 selection:text-primary">
       {/* Navbar */}
-      <Navbar 
+      <Navbar
         leftContent={
           city && (
             <Select value={city} onValueChange={handleCitySelect}>
@@ -336,7 +352,7 @@ export default function Home() {
             </div>
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-foreground leading-tight mb-5">
               Discover trusted local businesses<br />
-              <span className="text-primary">in your society.</span>
+              <span className="text-primary">in your neighbourhood.</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
               Find home chefs, tutors, bakers, tailors and more around you.
@@ -369,11 +385,10 @@ export default function Home() {
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
             <button
               onClick={() => setSelectedCategory("all")}
-              className={`shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold border transition-all ${
-                selectedCategory === "all"
+              className={`shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold border transition-all ${selectedCategory === "all"
                   ? "bg-primary text-primary-foreground border-primary shadow-sm"
                   : "bg-background border-border/60 text-muted-foreground hover:border-primary/50 hover:text-foreground"
-              }`}
+                }`}
             >
               All
             </button>
@@ -381,11 +396,10 @@ export default function Home() {
               <button
                 key={cat.name}
                 onClick={() => setSelectedCategory(selectedCategory === cat.name ? "all" : cat.name)}
-                className={`shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold border transition-all whitespace-nowrap ${
-                  selectedCategory === cat.name
+                className={`shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold border transition-all whitespace-nowrap ${selectedCategory === cat.name
                     ? "bg-primary text-primary-foreground border-primary shadow-sm"
                     : "bg-background border-border/60 text-muted-foreground hover:border-primary/50 hover:text-foreground"
-                }`}
+                  }`}
               >
                 <cat.icon className="w-4 h-4" />{cat.name}
               </button>
@@ -447,7 +461,7 @@ export default function Home() {
 
           {bizLoading && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {[1,2,3,4,5,6,7,8].map(i => (
+              {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
                 <div key={i} className="rounded-xl bg-muted animate-pulse h-72" />
               ))}
             </div>
@@ -471,7 +485,7 @@ export default function Home() {
                   <BusinessCard
                     row={row}
                     isFav={false}
-                    onToggleFav={() => {}}
+                    onToggleFav={() => { }}
                     favPending={false}
                     onWhatsApp={handleWhatsApp}
                     onClick={(id) => setLocation(`/business/${id}`)}
@@ -549,7 +563,7 @@ export default function Home() {
                   <BusinessCard
                     row={row}
                     isFav={false}
-                    onToggleFav={() => {}}
+                    onToggleFav={() => { }}
                     favPending={false}
                     onWhatsApp={handleWhatsApp}
                     onClick={(id) => setLocation(`/business/${id}`)}
@@ -626,10 +640,10 @@ export default function Home() {
             </div>
           </div>
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-8 text-sm text-muted-foreground">
-              <button onClick={() => setLocation("/about")} className="hover:text-foreground transition-colors">About Us</button>
-              <button onClick={() => setLocation("/contact")} className="hover:text-foreground transition-colors">Contact Us</button>
-              <button onClick={() => setLocation("/terms")} className="hover:text-foreground transition-colors">Terms & Conditions</button>
-              <button onClick={() => setLocation("/refund")} className="hover:text-foreground transition-colors">Refund & Cancellation</button>
+            <button onClick={() => setLocation("/about")} className="hover:text-foreground transition-colors">About Us</button>
+            <button onClick={() => setLocation("/contact")} className="hover:text-foreground transition-colors">Contact Us</button>
+            <button onClick={() => setLocation("/terms")} className="hover:text-foreground transition-colors">Terms & Conditions</button>
+            <button onClick={() => setLocation("/refund")} className="hover:text-foreground transition-colors">Refund & Cancellation</button>
           </div>
           <p className="text-center text-xs text-muted-foreground mt-8">
             © {new Date().getFullYear()} Hustly. Your neighbourhood marketplace.
@@ -641,7 +655,7 @@ export default function Home() {
       {/* City Selection Modal */}
       {showCityModal && (
         <div className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="bg-card text-card-foreground shadow-xl rounded-2xl p-6 w-full max-w-sm border border-border"
@@ -653,9 +667,9 @@ export default function Home() {
             <p className="text-center text-muted-foreground mb-6">Select your city to discover local home businesses around you.</p>
             <div className="grid grid-cols-2 gap-3">
               {["Delhi", "Gurgaon", "Noida", "Pune", "Mumbai", "Bangalore", "Hyderabad"].map(c => (
-                <Button 
-                  key={c} 
-                  variant="outline" 
+                <Button
+                  key={c}
+                  variant="outline"
                   onClick={() => handleCitySelect(c)}
                   className="font-semibold"
                 >
