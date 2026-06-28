@@ -116,7 +116,7 @@ router.post("/businesses", requireAuth, async (req: Request, res: Response, next
         clerkUserId: userId,
         status: "pending",
         ...parsed,
-      })
+      } as any)
       .returning();
 
     res.status(201).json(business);
@@ -130,8 +130,8 @@ router.post("/businesses", requireAuth, async (req: Request, res: Response, next
 });
 
 router.put("/businesses/:id", requireAuth, async (req: Request, res: Response, next) => {
-  const { userId } = req as AuthedRequest;
   const id = Number(req.params.id);
+  const { userId } = req as AuthedRequest;
 
   try {
     const parsed = insertBusinessSchema.parse({
@@ -151,7 +151,7 @@ router.put("/businesses/:id", requireAuth, async (req: Request, res: Response, n
       return;
     }
 
-    const newStatus = existing.status === "approved" ? "pending" : existing.status;
+    const newStatus = (existing.status === "approved" || existing.status === "rejected") ? "pending" : existing.status;
 
     const [updated] = await db
       .update(businessesTable)
@@ -159,7 +159,8 @@ router.put("/businesses/:id", requireAuth, async (req: Request, res: Response, n
         ...parsed,
         status: newStatus,
         imageUrl: parsed.imageUrl || existing.imageUrl,
-      })
+        rejectionReason: newStatus === "pending" ? null : existing.rejectionReason,
+      } as any)
       .where(eq(businessesTable.id, id))
       .returning();
 

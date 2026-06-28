@@ -15,6 +15,6 @@ export const reviewsTable = pgTable("reviews", {
 
 export const insertReviewSchema = createInsertSchema(reviewsTable).omit({
   id: true, clerkUserId: true, createdAt: true,
-});
+}) as unknown as z.ZodObject<any, any, any>;
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type Review = typeof reviewsTable.$inferSelect;

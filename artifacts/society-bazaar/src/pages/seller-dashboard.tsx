@@ -465,9 +465,17 @@ export default function SellerDashboard() {
     return false;
   });
 
+  const [dismissedApproval, setDismissedApproval] = useState(() => {
+    if (typeof window !== "undefined" && user?.id) {
+      return localStorage.getItem(`hustly_dismiss_approval_${user.id}`) === "true";
+    }
+    return false;
+  });
+
   useEffect(() => {
     if (user?.id) {
       setDismissedCelebration(localStorage.getItem(`hustly_dismiss_first_enquiry_${user.id}`) === "true");
+      setDismissedApproval(localStorage.getItem(`hustly_dismiss_approval_${user.id}`) === "true");
     }
   }, [user?.id]);
 
@@ -501,6 +509,16 @@ export default function SellerDashboard() {
       localStorage.setItem(`hustly_dismiss_first_enquiry_${user.id}`, "true");
     }
     setDismissedCelebration(true);
+  };
+
+  const hasApprovedListing = !bizLoading && businesses?.some(r => r.business.status === "approved");
+  const showApprovalBanner = hasApprovedListing && !dismissedApproval;
+
+  const dismissApproval = () => {
+    if (user?.id) {
+      localStorage.setItem(`hustly_dismiss_approval_${user.id}`, "true");
+    }
+    setDismissedApproval(true);
   };
 
   const statCards = [
@@ -570,6 +588,30 @@ export default function SellerDashboard() {
                 onClick={dismissCelebration}
                 className="text-green-600 hover:text-green-800 transition-colors p-1"
                 aria-label="Dismiss banner"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Business Approved Banner */}
+        {showApprovalBanner && (
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+            <div className="p-4 rounded-xl bg-green-50 border border-green-300 shadow-sm flex justify-between items-start gap-4">
+              <div className="flex-1">
+                <h4 className="font-bold text-green-800 text-sm">
+                  🎉 Congratulations! Your business has been approved.
+                </h4>
+                <p className="text-xs text-green-700 mt-1 leading-relaxed">
+                  Your business is now live on Hustly and reaching nearby customers.
+                  Keep your profile updated to receive more enquiries.
+                </p>
+              </div>
+              <button
+                onClick={dismissApproval}
+                className="text-green-600 hover:text-green-800 transition-colors p-1"
+                aria-label="Dismiss approval banner"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -689,9 +731,33 @@ export default function SellerDashboard() {
                           </p>
                         )}
                         {biz.status === "rejected" && (
-                          <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-2 py-1 mt-2 inline-block">
-                            Listing rejected — contact support if you think this is wrong
-                          </p>
+                          <div className="mt-3 p-4 rounded-xl bg-red-50 border border-red-200 space-y-3">
+                            <div>
+                              <span className="text-xs font-bold text-red-800 uppercase tracking-wider block">Status:</span>
+                              <span className="text-sm font-semibold text-red-700">Rejected</span>
+                            </div>
+                            <div>
+                              <span className="text-xs font-bold text-red-800 uppercase tracking-wider block">Message:</span>
+                              <p className="text-sm text-red-700">Your listing was rejected.</p>
+                            </div>
+                            {biz.rejectionReason && (
+                              <div>
+                                <span className="text-xs font-bold text-red-800 uppercase tracking-wider block">Reason:</span>
+                                <p className="text-sm text-red-600 bg-white/60 p-2.5 rounded-lg border border-red-100 mt-1 leading-relaxed">
+                                  {biz.rejectionReason}
+                                </p>
+                              </div>
+                            )}
+                            <div className="pt-1">
+                              <Button
+                                size="sm"
+                                className="bg-red-600 hover:bg-red-700 text-white font-semibold"
+                                onClick={() => setLocation(`/sell/edit/${biz.id}`)}
+                              >
+                                <Pencil className="w-3.5 h-3.5 mr-1.5" /> Edit & Resubmit
+                              </Button>
+                            </div>
+                          </div>
                         )}
                       </div>
                       <div className="flex gap-2 shrink-0 flex-wrap">

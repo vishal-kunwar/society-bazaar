@@ -65,6 +65,7 @@ export interface Business {
   coverImageUrl?: string | null;
   subscriptionPlan?: string;
   proValidUntil?: string | null;
+  rejectionReason?: string | null;
 }
 
 export interface BusinessRow {
@@ -235,10 +236,10 @@ export const api = {
       const qs = status ? `?status=${status}` : "";
       return request<{ business: Business; society: Society | null }[]>(`/admin/businesses${qs}`);
     },
-    updateStatus: (id: number, status: string) =>
+    updateStatus: (id: number, status: string, rejectionReason?: string) =>
       request(`/admin/businesses/${id}/status`, {
         method: "PATCH",
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, rejectionReason }),
       }),
     payments: () => request<any[]>("/admin/payments"),
     updatePayment: (id: number) => request(`/admin/payments/${id}/approve`, { method: "PATCH" }),

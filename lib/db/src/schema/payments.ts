@@ -17,6 +17,6 @@ export const paymentsTable = pgTable("payments", {
 
 export const insertPaymentSchema = createInsertSchema(paymentsTable).omit({
   id: true, createdAt: true, updatedAt: true,
-});
+}) as unknown as z.ZodObject<any, any, any>;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type Payment = typeof paymentsTable.$inferSelect;

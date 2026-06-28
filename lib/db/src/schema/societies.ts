@@ -12,6 +12,6 @@ export const societiesTable = pgTable("societies", {
   unique().on(t.name, t.locality, t.city)
 ]);
 
-export const insertSocietySchema = createInsertSchema(societiesTable).omit({ id: true, createdAt: true });
+export const insertSocietySchema = createInsertSchema(societiesTable).omit({ id: true, createdAt: true }) as unknown as z.ZodObject<any, any, any>;
 export type InsertSociety = z.infer<typeof insertSocietySchema>;
 export type Society = typeof societiesTable.$inferSelect;

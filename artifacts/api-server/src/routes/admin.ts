@@ -119,16 +119,24 @@ router.get("/admin/businesses", requireAdmin, async (req: Request, res: Response
 
 router.patch("/admin/businesses/:id/status", requireAdmin, async (req: Request, res: Response) => {
   const id = Number(req.params.id);
-  const { status } = req.body;
+  const { status, rejectionReason } = req.body;
 
   if (!["approved", "rejected", "pending"].includes(status)) {
     res.status(400).json({ error: "Invalid status" });
     return;
   }
 
+  if (status === "rejected" && !rejectionReason?.trim()) {
+    res.status(400).json({ error: "Rejection reason is required" });
+    return;
+  }
+
   const [updated] = await db
     .update(businessesTable)
-    .set({ status })
+    .set({
+      status,
+      rejectionReason: status === "rejected" ? rejectionReason.trim() : null,
+    })
     .where(eq(businessesTable.id, id))
     .returning();
 

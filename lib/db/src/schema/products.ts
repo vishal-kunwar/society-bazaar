@@ -20,6 +20,6 @@ export const productsTable = pgTable("products", {
 
 export const insertProductSchema = createInsertSchema(productsTable).omit({
   id: true, createdAt: true, updatedAt: true,
-});
+}) as unknown as z.ZodObject<any, any, any>;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Product = typeof productsTable.$inferSelect;

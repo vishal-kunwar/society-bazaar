@@ -44,6 +44,7 @@ export const businessesTable = pgTable("businesses", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
   subscriptionPlan: subscriptionPlanEnum("subscription_plan").notNull().default("free_trial"),
   proValidUntil: timestamp("pro_valid_until", { withTimezone: true }),
+  rejectionReason: text("rejection_reason"),
 
   // Extended onboarding fields (all optional for backwards compat)
   email: text("email"),
@@ -61,6 +62,6 @@ export const businessesTable = pgTable("businesses", {
 
 export const insertBusinessSchema = createInsertSchema(businessesTable).omit({
   id: true, clerkUserId: true, status: true, createdAt: true, updatedAt: true,
-});
+}) as unknown as z.ZodObject<any, any, any>;
 export type InsertBusiness = z.infer<typeof insertBusinessSchema>;
 export type Business = typeof businessesTable.$inferSelect;
