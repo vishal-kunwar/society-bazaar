@@ -21,7 +21,7 @@ export function Navbar({ leftContent, rightContent, mobileContent }: NavbarProps
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
               <MapPin className="text-primary-foreground w-5 h-5" />
             </div>
-            <span className="font-extrabold text-xl tracking-tight hidden sm:inline-block">
+            <span className="font-extrabold text-xl tracking-tight">
               Hust<span className="text-primary">ly</span>
             </span>
           </div>
