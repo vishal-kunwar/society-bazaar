@@ -64,6 +64,7 @@ export interface Business {
   servicesOffered?: string | null;
   coverImageUrl?: string | null;
   subscriptionPlan?: string;
+  proValidUntil?: string | null;
 }
 
 export interface BusinessRow {

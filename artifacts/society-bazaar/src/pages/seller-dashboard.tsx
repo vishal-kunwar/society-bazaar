@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import {
   MapPin, Star, TrendingUp, MessageCircle, Plus, Clock,
   CheckCircle2, XCircle, LogOut, Flame, Heart, Bell, Zap,
-  RefreshCw, PauseCircle, PlayCircle, Megaphone, Tag, Package, Pencil,
+  RefreshCw, PauseCircle, PlayCircle, Megaphone, Tag, Package, Pencil, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,61 +43,223 @@ function SubscriptionTracker({ biz, onUpgrade }: { biz: BusinessRow; onUpgrade: 
   const daysRemaining = biz.daysRemaining ?? 0;
   const daysUsed = Math.max(0, 90 - daysRemaining);
 
+  const remainingLeads = Math.max(0, 25 - leadsUsed);
+
+  // Determine if free plan has ended
+  const freePlanEnded = trialOver || leadsUsed >= 25 || daysRemaining <= 0;
+
+  // Determine if low leads warning should be shown (5 or fewer leads remaining, but free plan has not fully ended)
+  const showLowLeadsWarning = !isPro && !freePlanEnded && remainingLeads <= 5 && remainingLeads > 0;
+
   if (isPro) {
     return (
-      <Card className="border-2 border-primary/30 bg-primary/5 mb-4">
-        <CardContent className="p-5 flex items-center justify-between">
-          <div>
-            <h3 className="font-bold text-base text-primary">Pro Seller 🚀 - {biz.business.businessName}</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Your subscription is active.</p>
-          </div>
-          <Badge className="bg-primary text-white">Active</Badge>
-        </CardContent>
-      </Card>
+      <div className="space-y-4 mb-6">
+        <Card className="border-2 border-green-500/30 bg-green-500/5 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                  <span className="text-green-600 text-lg">✅</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-foreground flex items-center gap-2">
+                    Pro Plan Active <span className="text-sm font-normal text-muted-foreground">({biz.business.businessName})</span>
+                  </h3>
+                  <p className="text-sm text-muted-foreground">Thank you for upgrading.</p>
+                </div>
+              </div>
+              <Badge className="bg-green-600 text-white hover:bg-green-700">Active</Badge>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-border/40 pt-4">
+              <div className="space-y-2">
+                <p className="text-sm text-foreground">
+                  <strong>Plan Status:</strong> <span className="text-green-600 font-semibold">Active</span>
+                </p>
+                {biz.business.proValidUntil && (
+                  <p className="text-sm text-foreground">
+                    <strong>Valid Until:</strong> {new Date(biz.business.proValidUntil).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric"
+                    })}
+                  </p>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm text-foreground">
+                  <strong>Monthly Leads Received:</strong> <span className="font-semibold text-primary">{leadsUsed}</span>
+                </p>
+                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                  Unlimited Leads Enabled <span className="text-base">♾️</span>
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end mt-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => onUpgrade(biz.business.id)}
+                className="text-primary hover:text-primary-hover border-primary/20 hover:bg-primary/5"
+              >
+                Manage Subscription
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <Card className={`mb-4 border-2 ${trialOver ? "border-orange-300 bg-orange-50" : "border-primary/30 bg-primary/5"}`}>
-      <CardContent className="p-5">
-        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+    <div className="space-y-4 mb-6">
+      {/* Free Plan Ended Banner */}
+      {freePlanEnded && (
+        <div className="p-4 rounded-xl bg-red-50 border border-red-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h3 className="font-bold text-base">
-              {trialOver ? `Trial Complete — ${biz.business.businessName}` : `Founding Seller Offer 🎉 — ${biz.business.businessName}`}
-            </h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {trialOver
-                ? "Contact features are disabled. Upgrade to Pro - ₹199/month to reactivate."
-                : "First 25 leads free OR 90 days free — whichever comes first."}
+            <h4 className="font-bold text-red-800 text-sm flex items-center gap-1.5">
+              Free Plan Ended
+            </h4>
+            <p className="text-xs text-red-700 mt-1">
+              Your FREE plan has ended. Buyers can still discover your business, but your WhatsApp contact button is disabled until you activate Pro.
             </p>
           </div>
-          <Button size="sm" onClick={() => onUpgrade(biz.business.id)} className="shrink-0 bg-orange-500 hover:bg-orange-600 text-white">
-            Upgrade to Pro — ₹199/month
+          <Button 
+            size="sm" 
+            onClick={() => onUpgrade(biz.business.id)} 
+            className="bg-red-600 hover:bg-red-700 text-white shrink-0 font-medium"
+          >
+            Activate Pro — ₹199/month
           </Button>
         </div>
-        <div className="space-y-3">
+      )}
+
+      {/* Low Free Leads Warning Banner */}
+      {showLowLeadsWarning && (
+        <div className="p-4 rounded-xl bg-orange-50 border border-orange-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <div className="flex justify-between text-xs font-medium mb-1">
-              <span>Leads Used</span>
-              <span className={leadsUsed >= 25 ? "text-orange-600 font-bold" : ""}>{leadsUsed} / 25</span>
-            </div>
-            <Progress value={Math.min((leadsUsed / 25) * 100, 100)} className="h-2" />
+            <h4 className="font-bold text-orange-800 text-sm flex items-center gap-1.5">
+              🎉 Great news! Your business is getting noticed.
+            </h4>
+            <p className="text-xs text-orange-700 mt-1">
+              Only {remainingLeads} FREE leads remaining. Upgrade now to continue receiving unlimited customer enquiries.
+            </p>
           </div>
-          <div>
-            <div className="flex justify-between text-xs font-medium mb-1">
-              <span>Days Used</span>
-              <span className={daysUsed >= 90 ? "text-orange-600 font-bold" : ""}>{daysUsed} / 90</span>
-            </div>
-            <Progress value={Math.min((daysUsed / 90) * 100, 100)} className="h-2" />
-          </div>
+          <Button 
+            size="sm" 
+            onClick={() => onUpgrade(biz.business.id)} 
+            className="bg-orange-500 hover:bg-orange-600 text-white shrink-0 font-medium"
+          >
+            Upgrade Now
+          </Button>
         </div>
-        {!trialOver && (
-          <p className="text-xs text-muted-foreground mt-3 text-center font-medium">
-            Trial Days Remaining: {daysRemaining}
-          </p>
-        )}
-      </CardContent>
-    </Card>
+      )}
+
+      {/* Free Plan Card */}
+      <Card className={`border-2 ${freePlanEnded ? "border-red-200 bg-red-50/10" : "border-primary/20 bg-primary/5"} shadow-sm`}>
+        <CardContent className="p-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Column: Free Plan Details & Stats */}
+            <div className="space-y-4 flex flex-col justify-between">
+              <div>
+                <h3 className="font-bold text-lg text-foreground flex items-center gap-1.5">
+                  🎉 Founding Seller (FREE)
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1 font-medium">
+                  25 FREE WhatsApp Leads OR 90 Days Free (whichever comes first)
+                </p>
+                <p className="text-xs font-semibold text-muted-foreground mt-0.5">
+                  Business: {biz.business.businessName}
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <div className="flex justify-between text-xs font-semibold mb-1">
+                    <span>Free Leads</span>
+                    <span className={leadsUsed >= 25 ? "text-red-600 font-bold" : ""}>
+                      {leadsUsed} / 25 used
+                    </span>
+                  </div>
+                  <Progress value={Math.min((leadsUsed / 25) * 100, 100)} className="h-2" />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-semibold mb-1">
+                    <span>Free Trial</span>
+                    <span className={daysRemaining <= 0 ? "text-red-600 font-bold" : ""}>
+                      {daysUsed} / 90 days used
+                    </span>
+                  </div>
+                  <Progress value={Math.min((daysUsed / 90) * 100, 100)} className="h-2" />
+                </div>
+              </div>
+
+              <ul className="text-xs space-y-1.5 text-muted-foreground border-t border-border/40 pt-3">
+                <li className="flex items-center justify-between">
+                  <span>• Free Leads Used:</span>
+                  <span className="font-medium text-foreground">{leadsUsed} / 25</span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span>• Remaining Free Leads:</span>
+                  <span className="font-medium text-foreground">{remainingLeads}</span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span>• Free Trial Days Used:</span>
+                  <span className="font-medium text-foreground">{daysUsed} / 90</span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span>• Trial Days Remaining:</span>
+                  <span className="font-medium text-foreground">{daysRemaining}</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Right Column: Pro Plan Value Section */}
+            <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 flex flex-col justify-between space-y-4">
+              <div>
+                <h4 className="font-bold text-base text-foreground flex items-center gap-1.5">
+                  ⭐ Upgrade to Pro — ₹199/month
+                </h4>
+                <p className="text-xs text-muted-foreground mt-1 mb-3">
+                  Keep receiving customer enquiries without interruption.
+                </p>
+                <ul className="text-xs space-y-2 text-foreground/90">
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 shrink-0">✅</span>
+                    <span>Unlimited WhatsApp Leads</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 shrink-0">✅</span>
+                    <span>WhatsApp button always active</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 shrink-0">✅</span>
+                    <span>Priority visibility in search results</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 shrink-0">✅</span>
+                    <span>Pro Seller badge</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 shrink-0">✅</span>
+                    <span>Access to all future premium features</span>
+                  </li>
+                </ul>
+              </div>
+              <Button 
+                onClick={() => onUpgrade(biz.business.id)} 
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm mt-2"
+              >
+                Upgrade to Pro
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
@@ -296,6 +458,19 @@ export default function SellerDashboard() {
   const qc = useQueryClient();
   const [upgradeBizId, setUpgradeBizId] = useState<number | null>(null);
 
+  const [dismissedCelebration, setDismissedCelebration] = useState(() => {
+    if (typeof window !== "undefined" && user?.id) {
+      return localStorage.getItem(`hustly_dismiss_first_enquiry_${user.id}`) === "true";
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    if (user?.id) {
+      setDismissedCelebration(localStorage.getItem(`hustly_dismiss_first_enquiry_${user.id}`) === "true");
+    }
+  }, [user?.id]);
+
   const { data: businesses, isLoading: bizLoading } = useQuery({
     queryKey: ["my-businesses"],
     queryFn: () => api.businesses.mine(),
@@ -317,6 +492,16 @@ export default function SellerDashboard() {
   });
 
   const approvedBusinesses = businesses?.filter(r => r.business.status === "approved") ?? [];
+
+  const hasFirstEnquiry = !analyticsLoading && analytics && analytics.totalLeads >= 1;
+  const showCelebrationBanner = hasFirstEnquiry && !dismissedCelebration;
+
+  const dismissCelebration = () => {
+    if (user?.id) {
+      localStorage.setItem(`hustly_dismiss_first_enquiry_${user.id}`, "true");
+    }
+    setDismissedCelebration(true);
+  };
 
   const statCards = [
     { label: "Leads This Month", value: analyticsLoading ? "…" : analytics?.leadsThisMonth ?? 0, icon: MessageCircle, color: "text-primary", bg: "bg-primary/10" },
@@ -364,6 +549,33 @@ export default function SellerDashboard() {
           </h1>
           <p className="text-muted-foreground">Manage your hustles and track your growth</p>
         </div>
+
+        {/* First Customer Enquiry Celebration Banner */}
+        {showCelebrationBanner && (
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+            <div className="p-4 rounded-xl bg-green-50 border border-green-200 shadow-sm flex justify-between items-start gap-4 relative">
+              <div className="flex-1">
+                <h4 className="font-bold text-green-800 text-sm flex items-center gap-1.5">
+                  🎉 Congratulations!
+                </h4>
+                <p className="text-xs text-green-700 mt-1 leading-relaxed">
+                  You received your first customer enquiry from Hustly!
+                  <br />
+                  Your business is now reaching nearby customers.
+                  <br />
+                  Keep your profile updated to receive even more enquiries.
+                </p>
+              </div>
+              <button 
+                onClick={dismissCelebration}
+                className="text-green-600 hover:text-green-800 transition-colors p-1"
+                aria-label="Dismiss banner"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </motion.div>
+        )}
 
         {/* Lead reminder */}
         {!analyticsLoading && analytics && analytics.leadsThisMonth > 0 && (
