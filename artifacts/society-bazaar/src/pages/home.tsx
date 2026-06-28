@@ -202,6 +202,14 @@ export default function Home() {
     enabled: !!city,
   });
   const { data: deals } = useQuery({ queryKey: ["deals"], queryFn: () => api.deals.list() });
+
+  useEffect(() => {
+    if (deals && deals.length > 0) {
+      deals.forEach(row => {
+        api.deals.trackView(row.deal.id).catch(() => {});
+      });
+    }
+  }, [deals]);
   const { data: feed } = useQuery({
     queryKey: ["feed", selectedSociety],
     queryFn: () => api.feed.list(selectedSociety !== "all" ? Number(selectedSociety) : undefined),
@@ -212,6 +220,11 @@ export default function Home() {
     const msg = encodeURIComponent("Hi, I found your business on Hustly and would like to know more.");
     window.open(`https://wa.me/${whatsapp.replace(/\D/g, "")}?text=${msg}`, "_blank");
   }, []);
+
+  const handleClaimDeal = useCallback((dealId: number, businessId: number, whatsapp: string) => {
+    api.deals.trackClick(dealId).catch(() => { });
+    handleWhatsApp(businessId, whatsapp);
+  }, [handleWhatsApp]);
 
   const filtered = businesses?.filter(r => {
     if (!searchQuery) return true;
@@ -511,11 +524,14 @@ export default function Home() {
                       </div>
                       <h3 className="font-bold mb-1 text-foreground">{row.deal.title}</h3>
                       <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{row.deal.description}</p>
+                      {row.deal.offerPrice && (
+                        <p className="text-sm font-bold text-orange-600 mb-2">Offer Price: {row.deal.offerPrice}</p>
+                      )}
                       <p className="text-xs font-medium text-foreground flex items-center gap-1 mb-4">
                         <MapPin className="w-3 h-3 text-primary" />{row.business.businessName} · {row.society ? `${row.society.name}${row.society.locality ? `, ${row.society.locality}` : ""}` : "—"}
                       </p>
                       <button
-                        onClick={() => handleWhatsApp(row.business.id, row.business.whatsapp)}
+                        onClick={() => handleClaimDeal(row.deal.id, row.business.id, row.business.whatsapp)}
                         className="w-full inline-flex items-center justify-center rounded-lg h-9 text-sm font-semibold bg-[#25D366] text-white hover:bg-[#20bd5a] transition-colors"
                       >
                         <MessageCircle className="w-4 h-4 mr-1.5" />Claim Deal

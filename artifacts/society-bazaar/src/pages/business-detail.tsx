@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { motion } from "framer-motion";
-import { MapPin, ArrowLeft, Star, MessageCircle, Phone, Heart, RefreshCw, Package } from "lucide-react";
+import { MapPin, ArrowLeft, Star, MessageCircle, Phone, Heart, RefreshCw, Package, Flame, Clock } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUser } from "@clerk/react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,33 @@ import { Navbar } from "@/components/navbar";
 
 import { CATEGORY_IMAGES } from "@/lib/constants";
 
+
+function getTimeRemaining(expiresAt: string) {
+  const total = new Date(expiresAt).getTime() - Date.now();
+  if (total <= 0) return null;
+  const days = Math.floor(total / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((total % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((total % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((total % (1000 * 60)) / 1000);
+  return { days, hours, minutes, seconds };
+}
+
+function DealCountdown({ expiresAt }: { expiresAt: string }) {
+  const [time, setTime] = useState(() => getTimeRemaining(expiresAt));
+  useEffect(() => {
+    const t = setInterval(() => setTime(getTimeRemaining(expiresAt)), 1000);
+    return () => clearInterval(t);
+  }, [expiresAt]);
+  if (!time) return <span className="text-xs text-red-500 font-semibold">Expired</span>;
+  if (time.days > 0) return <span className="text-xs font-bold text-orange-700">{time.days}d {time.hours}h left</span>;
+  return (
+    <span className="text-xs font-bold text-red-600 tabular-nums">
+      {String(time.hours).padStart(2, "0")}:{String(time.minutes).padStart(2, "0")}:{String(time.seconds).padStart(2, "0")} left
+    </span>
+  );
+}
+
+import { useEffect } from "react";
 
 export default function BusinessDetail() {
   const { id } = useParams<{ id: string }>();
@@ -33,6 +60,12 @@ export default function BusinessDetail() {
     queryKey: ["business", id],
     queryFn: () => api.businesses.get(Number(id)),
   });
+
+  useEffect(() => {
+    if (data?.activeDeal) {
+      api.deals.trackView(data.activeDeal.id).catch(() => {});
+    }
+  }, [data?.activeDeal]);
 
   const { data: products } = useQuery({
     queryKey: ["products", id],
@@ -185,6 +218,38 @@ export default function BusinessDetail() {
                   </span>
                 </div>
               </div>
+
+              {/* Active Daily Deal */}
+              {data.activeDeal && (
+                <Card className="mb-6 border-orange-200 bg-gradient-to-br from-orange-50 to-transparent overflow-hidden shadow-sm">
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs font-semibold">
+                        <Flame className="w-3 h-3 mr-1" /> Active Daily Deal
+                      </Badge>
+                      <DealCountdown expiresAt={data.activeDeal.expiresAt} />
+                    </div>
+                    <h3 className="font-bold text-lg mb-1 text-foreground">{data.activeDeal.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-3">{data.activeDeal.description}</p>
+                    {data.activeDeal.offerPrice && (
+                      <p className="text-base font-extrabold text-orange-600 mb-4">
+                        Offer Price: {data.activeDeal.offerPrice}
+                      </p>
+                    )}
+                    <button
+                      onClick={() => {
+                        api.deals.trackClick(data.activeDeal!.id).catch(() => {});
+                        api.leads.track(biz.id, "whatsapp_deal").catch(() => {});
+                        const msg = encodeURIComponent(`Hi, I saw your Daily Deal "${data.activeDeal!.title}" on Hustly and would like to claim it!`);
+                        window.open(`https://wa.me/${biz.whatsapp.replace(/\D/g, "")}?text=${msg}`, "_blank");
+                      }}
+                      className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl h-10 px-6 text-sm font-semibold bg-[#25D366] text-white hover:bg-[#20bd5a] transition-colors"
+                    >
+                      <MessageCircle className="w-4 h-4 mr-1.5" /> Claim Deal on WhatsApp
+                    </button>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* About */}
               <Card className="mb-6 border-border/50">

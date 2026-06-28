@@ -59,13 +59,13 @@ function SubscriptionTracker({ biz, onUpgrade }: { biz: BusinessRow; onUpgrade: 
             <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center shrink-0">
-                  <span className="text-green-600 text-lg">✅</span>
+                  <span className="text-green-600 text-lg">⭐</span>
                 </div>
                 <div>
                   <h3 className="font-bold text-lg text-foreground flex items-center gap-2">
-                    Pro Plan Active <span className="text-sm font-normal text-muted-foreground">({biz.business.businessName})</span>
+                    PRO PLAN ACTIVE <span className="text-sm font-normal text-muted-foreground">({biz.business.businessName})</span>
                   </h3>
-                  <p className="text-sm text-muted-foreground">Thank you for upgrading.</p>
+                  <p className="text-xs font-semibold text-green-700 uppercase tracking-wider">Unlimited Leads · Unlimited Daily Deals</p>
                 </div>
               </div>
               <Badge className="bg-green-600 text-white hover:bg-green-700">Active</Badge>
@@ -92,7 +92,7 @@ function SubscriptionTracker({ biz, onUpgrade }: { biz: BusinessRow; onUpgrade: 
                   <strong>Monthly Leads Received:</strong> <span className="font-semibold text-primary">{leadsUsed}</span>
                 </p>
                 <p className="text-sm text-muted-foreground flex items-center gap-1">
-                  Unlimited Leads Enabled <span className="text-base">♾️</span>
+                  Unlimited Leads & Deals Enabled <span className="text-base">♾️</span>
                 </p>
               </div>
             </div>
@@ -165,10 +165,10 @@ function SubscriptionTracker({ biz, onUpgrade }: { biz: BusinessRow; onUpgrade: 
             <div className="space-y-4 flex flex-col justify-between">
               <div>
                 <h3 className="font-bold text-lg text-foreground flex items-center gap-1.5">
-                  🎉 Founding Seller (FREE)
+                  🎉 Founding Seller Plan
                 </h3>
                 <p className="text-xs text-muted-foreground mt-1 font-medium">
-                  25 FREE WhatsApp Leads OR 90 Days Free (whichever comes first)
+                  25 Free Leads + 90-Day Trial
                 </p>
                 <p className="text-xs font-semibold text-muted-foreground mt-0.5">
                   Business: {biz.business.businessName}
@@ -233,19 +233,19 @@ function SubscriptionTracker({ biz, onUpgrade }: { biz: BusinessRow; onUpgrade: 
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-green-600 shrink-0">✅</span>
-                    <span>WhatsApp button always active</span>
+                    <span>Unlimited Daily Deals</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-green-600 shrink-0">✅</span>
-                    <span>Priority visibility in search results</span>
+                    <span>Priority Listing</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-green-600 shrink-0">✅</span>
-                    <span>Pro Seller badge</span>
+                    <span>PRO Seller Badge</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-green-600 shrink-0">✅</span>
-                    <span>Access to all future premium features</span>
+                    <span>Future Premium Features</span>
                   </li>
                 </ul>
               </div>
@@ -287,6 +287,18 @@ function UpgradeModal({ isOpen, onClose, businessId }: { isOpen: boolean; onClos
           <CardTitle>Upgrade to Pro - ₹199/month</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Pro Benefits */}
+          <div className="bg-primary/5 p-4 rounded-xl border border-primary/20 space-y-1.5">
+            <p className="text-xs font-bold text-primary uppercase tracking-wider mb-2">⭐ Pro Benefits Include:</p>
+            <ul className="text-xs space-y-1 text-foreground/90">
+              <li>✅ <strong>Unlimited WhatsApp Leads</strong></li>
+              <li>✅ <strong>Unlimited Daily Deals</strong></li>
+              <li>✅ <strong>Priority Listing</strong></li>
+              <li>✅ <strong>PRO Seller Badge</strong></li>
+              <li>✅ <strong>Future Premium Features</strong></li>
+            </ul>
+          </div>
+
           <div className="bg-muted p-4 rounded-lg flex flex-col items-center justify-center space-y-2">
             <div className="w-48 h-48 bg-white flex items-center justify-center border-4 border-primary overflow-hidden">
               <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi%3A%2F%2Fpay%3Fpa%3Dkotakupivk%40axl%26pn%3DHustly%26am%3D199%26cu%3DINR" alt="UPI QR Code" className="w-full h-full p-2 object-contain" />
@@ -311,85 +323,43 @@ function UpgradeModal({ isOpen, onClose, businessId }: { isOpen: boolean; onClos
   );
 }
 
-function PostUpdateForm({ businesses }: { businesses: { business: { id: number; businessName: string } }[] }) {
+function CreateDealForm({ 
+  businesses, 
+  onUpgrade 
+}: { 
+  businesses: BusinessRow[]; 
+  onUpgrade: (id: number) => void;
+}) {
   const [open, setOpen] = useState(false);
-  const [bizId, setBizId] = useState<number | null>(businesses[0]?.business?.id ?? null);
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const qc = useQueryClient();
-  const { toast } = useToast();
-
-  const post = useMutation({
-    mutationFn: () => api.feed.create({ businessId: bizId!, title, body }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["feed"] });
-      setTitle(""); setBody(""); setOpen(false);
-      toast({ title: "Update posted! Your neighbours can see it now." });
-    },
-    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
-  });
-
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        className="w-full flex items-center gap-3 p-4 rounded-xl border-2 border-dashed border-primary/40 hover:border-primary/70 hover:bg-primary/5 transition-all text-left group"
-      >
-        <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-          <Megaphone className="w-5 h-5 text-primary" />
-        </div>
-        <div>
-          <p className="font-semibold text-sm">Post an update today to get more visibility</p>
-          <p className="text-xs text-muted-foreground">Share your menu, offers or announcements</p>
-        </div>
-      </button>
-    );
-  }
-
-  return (
-    <Card className="border-primary/30 bg-primary/5">
-      <CardContent className="p-5">
-        <h4 className="font-bold mb-3">Post an Update</h4>
-        <div className="space-y-3">
-          {businesses.length > 1 && (
-            <select
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              value={bizId ?? ""}
-              onChange={e => setBizId(Number(e.target.value))}
-            >
-              {businesses.map(r => (
-                <option key={r.business.id} value={r.business.id}>{r.business.businessName}</option>
-              ))}
-            </select>
-          )}
-          <Input placeholder="Title (e.g. Today's Special Menu)" value={title} onChange={e => setTitle(e.target.value)} />
-          <Textarea placeholder="What's new? Share your offer, menu, or announcement…" rows={3} className="resize-none" value={body} onChange={e => setBody(e.target.value)} />
-          <div className="flex gap-3">
-            <Button size="sm" disabled={!title || !body || !bizId || post.isPending} onClick={() => post.mutate()}>
-              {post.isPending ? "Posting…" : "Post Update"}
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function CreateDealForm({ businesses }: { businesses: { business: { id: number; businessName: string } }[] }) {
-  const [open, setOpen] = useState(false);
-  const [bizId, setBizId] = useState<number | null>(businesses[0]?.business?.id ?? null);
+  const [selectedBizId, setSelectedBizId] = useState<number | null>(businesses[0]?.business?.id ?? null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [offerPrice, setOfferPrice] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
+  
   const qc = useQueryClient();
   const { toast } = useToast();
 
+  const selectedBizRow = businesses.find(r => r.business.id === selectedBizId);
+  const activeDeal = selectedBizRow?.activeDeal && new Date(selectedBizRow.activeDeal.expiresAt) > new Date() 
+    ? selectedBizRow.activeDeal 
+    : null;
+
+  const isPro = selectedBizRow?.business.subscriptionPlan === "pro";
+  const trialExpired = selectedBizRow?.trialExpired ?? false;
+
   const create = useMutation({
-    mutationFn: () => api.deals.create({ businessId: bizId!, title, description, expiresAt: new Date(expiresAt).toISOString() }),
+    mutationFn: () => api.deals.create({ 
+      businessId: selectedBizId!, 
+      title, 
+      description, 
+      offerPrice: offerPrice || undefined, 
+      expiresAt: new Date(expiresAt).toISOString() 
+    }),
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["my-businesses"] });
       qc.invalidateQueries({ queryKey: ["deals"] });
-      setTitle(""); setDescription(""); setExpiresAt(""); setOpen(false);
+      setTitle(""); setDescription(""); setOfferPrice(""); setExpiresAt(""); setOpen(false);
       toast({ title: "Deal created! It'll appear on the home page." });
     },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
@@ -399,33 +369,133 @@ function CreateDealForm({ businesses }: { businesses: { business: { id: number; 
   minDate.setDate(minDate.getDate() + 1);
   const minDateStr = minDate.toISOString().slice(0, 16);
 
+  // If trial has expired and not Pro, show the locked state
+  if (trialExpired && !isPro) {
+    return (
+      <Card className="border-red-200 bg-red-50/10 shadow-sm">
+        <CardContent className="p-5 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+              <span className="text-red-600 text-lg">🔒</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-base text-foreground">
+                Daily Deals are available only for Pro Sellers
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Upgrade to Pro to create unlimited limited-time offers and continue getting customer enquiries.
+              </p>
+            </div>
+          </div>
+          <Button 
+            onClick={() => onUpgrade(selectedBizId!)}
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold"
+          >
+            Upgrade to Pro — ₹199/month
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // If there is an active deal, show the active deal and its performance analytics
+  if (activeDeal) {
+    return (
+      <Card className="border-orange-200 bg-orange-50/10 shadow-sm">
+        <CardContent className="p-5 space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <Badge className="bg-orange-100 text-orange-800 border-orange-200">
+                🔥 Active Deal
+              </Badge>
+              {selectedBizRow && businesses.length > 1 && (
+                <select
+                  className="rounded-md border border-input bg-background px-2 py-1 text-xs"
+                  value={selectedBizId ?? ""}
+                  onChange={e => setSelectedBizId(Number(e.target.value))}
+                >
+                  {businesses.map(r => (
+                    <option key={r.business.id} value={r.business.id}>{r.business.businessName}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+            <div className="text-xs font-semibold text-orange-700 bg-orange-100/50 px-2 py-1 rounded">
+              Expires: {new Date(activeDeal.expiresAt).toLocaleString("en-IN")}
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-bold text-lg text-foreground">{activeDeal.title}</h4>
+            <p className="text-sm text-muted-foreground mt-1">{activeDeal.description}</p>
+            {activeDeal.offerPrice && (
+              <p className="text-base font-extrabold text-orange-600 mt-2">Offer Price: {activeDeal.offerPrice}</p>
+            )}
+          </div>
+
+          {/* Performance Analytics */}
+          <div className="border-t border-border/40 pt-4">
+            <h5 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Deal Performance</h5>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-muted/50 p-3 rounded-lg border border-border/20 text-center">
+                <span className="text-sm text-muted-foreground">👀 Views</span>
+                <p className="text-xl font-extrabold mt-0.5">{activeDeal.views}</p>
+              </div>
+              <div className="bg-muted/50 p-3 rounded-lg border border-border/20 text-center">
+                <span className="text-sm text-muted-foreground">💬 WhatsApp Clicks</span>
+                <p className="text-xl font-extrabold mt-0.5">{activeDeal.whatsappClicks}</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Otherwise, show the creation form or a button to open it
   if (!open) {
     return (
-      <button
-        onClick={() => setOpen(true)}
-        className="w-full flex items-center gap-3 p-4 rounded-xl border-2 border-dashed border-orange-300 hover:border-orange-500 hover:bg-orange-50 transition-all text-left group"
-      >
-        <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center group-hover:bg-orange-200 transition-colors">
-          <Tag className="w-5 h-5 text-orange-600" />
-        </div>
-        <div>
-          <p className="font-semibold text-sm">Create a Daily Deal</p>
-          <p className="text-xs text-muted-foreground">Limited-time offer with countdown timer</p>
-        </div>
-      </button>
+      <div className="space-y-4">
+        {businesses.length > 1 && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground font-medium">Select Business:</span>
+            <select
+              className="rounded-md border border-input bg-background px-2 py-1 text-xs"
+              value={selectedBizId ?? ""}
+              onChange={e => setSelectedBizId(Number(e.target.value))}
+            >
+              {businesses.map(r => (
+                <option key={r.business.id} value={r.business.id}>{r.business.businessName}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        <button
+          onClick={() => setOpen(true)}
+          className="w-full flex items-center gap-3 p-4 rounded-xl border-2 border-dashed border-orange-300 hover:border-orange-500 hover:bg-orange-50/50 transition-all text-left group"
+        >
+          <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center group-hover:bg-orange-200 transition-colors">
+            <span className="text-orange-600 text-lg">🔥</span>
+          </div>
+          <div>
+            <p className="font-semibold text-sm">Create a Daily Deal</p>
+            <p className="text-xs text-muted-foreground">Limited-time offer with countdown timer to get more visibility.</p>
+          </div>
+        </button>
+      </div>
     );
   }
 
   return (
-    <Card className="border-orange-300 bg-orange-50">
+    <Card className="border-orange-300 bg-orange-50/5">
       <CardContent className="p-5">
         <h4 className="font-bold mb-3 text-orange-800">Create a Daily Deal</h4>
         <div className="space-y-3">
           {businesses.length > 1 && (
             <select
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              value={bizId ?? ""}
-              onChange={e => setBizId(Number(e.target.value))}
+              value={selectedBizId ?? ""}
+              onChange={e => setSelectedBizId(Number(e.target.value))}
             >
               {businesses.map(r => (
                 <option key={r.business.id} value={r.business.id}>{r.business.businessName}</option>
@@ -434,12 +504,13 @@ function CreateDealForm({ businesses }: { businesses: { business: { id: number; 
           )}
           <Input placeholder="Deal title (e.g. Buy 5 get 1 free)" value={title} onChange={e => setTitle(e.target.value)} />
           <Textarea placeholder="Describe the offer…" rows={2} className="resize-none bg-white" value={description} onChange={e => setDescription(e.target.value)} />
+          <Input placeholder="Discount / Offer Price (e.g. ₹150, 20% OFF)" value={offerPrice} onChange={e => setOfferPrice(e.target.value)} />
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Expires at</label>
             <Input type="datetime-local" min={minDateStr} value={expiresAt} onChange={e => setExpiresAt(e.target.value)} className="bg-white" />
           </div>
           <div className="flex gap-3">
-            <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white" disabled={!title || !description || !expiresAt || !bizId || create.isPending} onClick={() => create.mutate()}>
+            <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white" disabled={!title || !description || !expiresAt || !selectedBizId || create.isPending} onClick={() => create.mutate()}>
               {create.isPending ? "Creating…" : "Create Deal"}
             </Button>
             <Button size="sm" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
@@ -660,11 +731,10 @@ export default function SellerDashboard() {
         </div>
 
         {/* Engagement tools */}
-        {approvedBusinesses.length > 0 && (
+        {businesses && businesses.length > 0 && (
           <div className="mb-8 space-y-3">
             <h2 className="text-base font-bold text-foreground">Engage Your Community</h2>
-            <PostUpdateForm businesses={approvedBusinesses} />
-            <CreateDealForm businesses={approvedBusinesses} />
+            <CreateDealForm businesses={businesses} onUpgrade={setUpgradeBizId} />
           </div>
         )}
 

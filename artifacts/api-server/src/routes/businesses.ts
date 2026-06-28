@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { businessesTable, societiesTable, reviewsTable, leadsTable } from "@workspace/db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { businessesTable, societiesTable, reviewsTable, leadsTable, dailyDealsTable } from "@workspace/db";
+import { eq, and, desc, sql, gt } from "drizzle-orm";
 import { requireAuth } from "../middlewares/requireAuth";
 import type { AuthedRequest } from "../middlewares/requireAuth";
 import type { Request, Response } from "express";
@@ -83,6 +83,19 @@ router.get("/businesses/:id", async (req: Request, res: Response) => {
     .where(eq(reviewsTable.businessId, id))
     .orderBy(desc(reviewsTable.createdAt));
 
+  // Fetch active daily deal if exists
+  const activeDeals = await db
+    .select()
+    .from(dailyDealsTable)
+    .where(
+      and(
+        eq(dailyDealsTable.businessId, id),
+        gt(dailyDealsTable.expiresAt, new Date())
+      )
+    )
+    .limit(1);
+  const activeDeal = activeDeals[0] || null;
+
   const row = rows[0];
   const isPro = row.business.subscriptionPlan === "pro" && row.business.proValidUntil && new Date(row.business.proValidUntil) > new Date();
   const daysSinceCreated = (new Date().getTime() - new Date(row.business.createdAt).getTime()) / (1000 * 60 * 60 * 24);
@@ -94,7 +107,7 @@ router.get("/businesses/:id", async (req: Request, res: Response) => {
     b.whatsapp = "";
   }
 
-  res.json({ ...row, business: b, trialExpired, reviews });
+  res.json({ ...row, business: b, trialExpired, reviews, activeDeal });
 });
 
 import { insertBusinessSchema } from "@workspace/db/schema";
@@ -232,14 +245,27 @@ router.get("/my-businesses", requireAuth, async (req: Request, res: Response) =>
     .groupBy(businessesTable.id, societiesTable.id)
     .orderBy(desc(businessesTable.createdAt));
 
-  const enrichedRows = rows.map(row => {
+  const enrichedRows = await Promise.all(rows.map(async (row) => {
     const isPro = row.business.subscriptionPlan === "pro" && row.business.proValidUntil && new Date(row.business.proValidUntil) > new Date();
     const daysSinceCreated = (new Date().getTime() - new Date(row.business.createdAt).getTime()) / (1000 * 60 * 60 * 24);
     const trialExpired = !isPro && (row.leadCount >= 25 || daysSinceCreated >= 90);
     const daysRemaining = Math.max(0, 90 - Math.floor(daysSinceCreated));
     
-    return { ...row, trialExpired, daysRemaining };
-  });
+    // Fetch active deal
+    const activeDeals = await db
+      .select()
+      .from(dailyDealsTable)
+      .where(
+        and(
+          eq(dailyDealsTable.businessId, row.business.id),
+          gt(dailyDealsTable.expiresAt, new Date())
+        )
+      )
+      .limit(1);
+    const activeDeal = activeDeals[0] || null;
+
+    return { ...row, trialExpired, daysRemaining, activeDeal };
+  }));
 
   res.json(enrichedRows);
 });
