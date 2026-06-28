@@ -10,6 +10,7 @@ export const dailyDealsTable = pgTable("daily_deals", {
   offerPrice: text("offer_price"),
   views: integer("views").default(0).notNull(),
   whatsappClicks: integer("whatsapp_clicks").default(0).notNull(),
+  startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

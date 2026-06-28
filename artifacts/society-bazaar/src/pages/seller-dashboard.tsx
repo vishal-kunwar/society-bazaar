@@ -323,6 +323,46 @@ function UpgradeModal({ isOpen, onClose, businessId }: { isOpen: boolean; onClos
   );
 }
 
+// Returns a datetime-local string in local time (not UTC) for use in input min attributes
+function toLocalDatetimeString(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function getDealStatus(deal: { startsAt: string; expiresAt: string }): "scheduled" | "active" | "expired" {
+  const now = Date.now();
+  if (now < new Date(deal.startsAt).getTime()) return "scheduled";
+  if (now < new Date(deal.expiresAt).getTime()) return "active";
+  return "expired";
+}
+
+function DealCountdownSeller({ expiresAt }: { expiresAt: string }) {
+  const [time, setTime] = useState(() => {
+    const total = new Date(expiresAt).getTime() - Date.now();
+    if (total <= 0) return null;
+    const days = Math.floor(total / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((total % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((total % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((total % (1000 * 60)) / 1000);
+    return { days, hours, minutes, seconds };
+  });
+  useEffect(() => {
+    const t = setInterval(() => {
+      const total = new Date(expiresAt).getTime() - Date.now();
+      if (total <= 0) { setTime(null); return; }
+      const days = Math.floor(total / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((total % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((total % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((total % (1000 * 60)) / 1000);
+      setTime({ days, hours, minutes, seconds });
+    }, 1000);
+    return () => clearInterval(t);
+  }, [expiresAt]);
+  if (!time) return <span className="font-bold text-red-500">Expired</span>;
+  if (time.days > 0) return <span className="font-bold text-orange-700">{time.days}d {time.hours}h left</span>;
+  return <span className="font-bold text-red-600 tabular-nums">{String(time.hours).padStart(2, "0")}:{String(time.minutes).padStart(2, "0")}:{String(time.seconds).padStart(2, "0")} left</span>;
+}
+
 function CreateDealForm({ 
   businesses, 
   onUpgrade 
@@ -335,39 +375,71 @@ function CreateDealForm({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [offerPrice, setOfferPrice] = useState("");
+  const [startsAt, setStartsAt] = useState(() => toLocalDatetimeString(new Date()));
   const [expiresAt, setExpiresAt] = useState("");
+  const [validationError, setValidationError] = useState("");
   
   const qc = useQueryClient();
   const { toast } = useToast();
 
   const selectedBizRow = businesses.find(r => r.business.id === selectedBizId);
-  const activeDeal = selectedBizRow?.activeDeal && new Date(selectedBizRow.activeDeal.expiresAt) > new Date() 
+  // Seller sees any non-expired deal (scheduled + active)
+  const currentDeal = selectedBizRow?.activeDeal && new Date(selectedBizRow.activeDeal.expiresAt) > new Date() 
     ? selectedBizRow.activeDeal 
     : null;
 
   const isPro = selectedBizRow?.business.subscriptionPlan === "pro";
   const trialExpired = selectedBizRow?.trialExpired ?? false;
 
+  const nowStr = toLocalDatetimeString(new Date());
+
   const create = useMutation({
-    mutationFn: () => api.deals.create({ 
-      businessId: selectedBizId!, 
-      title, 
-      description, 
-      offerPrice: offerPrice || undefined, 
-      expiresAt: new Date(expiresAt).toISOString() 
-    }),
+    mutationFn: () => {
+      // Re-validate before submit
+      const startD = new Date(startsAt);
+      const expD = new Date(expiresAt);
+      if (expD <= startD) throw new Error("Expiry time must be after start time.");
+      if (expD <= new Date()) throw new Error("Expiry time must be in the future.");
+      return api.deals.create({ 
+        businessId: selectedBizId!, 
+        title, 
+        description, 
+        offerPrice: offerPrice || undefined, 
+        startsAt: startD.toISOString(),
+        expiresAt: expD.toISOString(),
+      });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["my-businesses"] });
       qc.invalidateQueries({ queryKey: ["deals"] });
-      setTitle(""); setDescription(""); setOfferPrice(""); setExpiresAt(""); setOpen(false);
-      toast({ title: "Deal created! It'll appear on the home page." });
+      setTitle(""); setDescription(""); setOfferPrice(""); setExpiresAt(""); setValidationError(""); setOpen(false);
+      toast({ title: "Deal created! It'll appear on the home page once it starts." });
     },
-    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+    onError: (e: Error) => {
+      setValidationError(e.message);
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    },
   });
 
-  const minDate = new Date();
-  minDate.setDate(minDate.getDate() + 1);
-  const minDateStr = minDate.toISOString().slice(0, 16);
+  const handleExpiryChange = (val: string) => {
+    setExpiresAt(val);
+    if (val && startsAt && new Date(val) <= new Date(startsAt)) {
+      setValidationError("Expiry time must be after start time.");
+    } else if (val && new Date(val) <= new Date()) {
+      setValidationError("Expiry time must be in the future.");
+    } else {
+      setValidationError("");
+    }
+  };
+
+  const handleStartChange = (val: string) => {
+    setStartsAt(val);
+    if (expiresAt && new Date(expiresAt) <= new Date(val)) {
+      setValidationError("Expiry time must be after start time.");
+    } else {
+      setValidationError("");
+    }
+  };
 
   // If trial has expired and not Pro, show the locked state
   if (trialExpired && !isPro) {
@@ -398,15 +470,31 @@ function CreateDealForm({
     );
   }
 
-  // If there is an active deal, show the active deal and its performance analytics
-  if (activeDeal) {
+  // If there is a current deal (scheduled or active), show it with status + analytics
+  if (currentDeal) {
+    const status = getDealStatus(currentDeal);
+    const statusConfig = {
+      scheduled: { label: "⏰ Scheduled", classes: "bg-blue-100 text-blue-800 border-blue-200" },
+      active:    { label: "🔥 Active",    classes: "bg-orange-100 text-orange-800 border-orange-200" },
+      expired:   { label: "✓ Expired",   classes: "bg-gray-100 text-gray-600 border-gray-200" },
+    }[status];
+    const endsOnStr = new Date(currentDeal.expiresAt).toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      day: "numeric", month: "short", year: "numeric",
+      hour: "2-digit", minute: "2-digit"
+    });
+    const startsOnStr = new Date(currentDeal.startsAt).toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      day: "numeric", month: "short", year: "numeric",
+      hour: "2-digit", minute: "2-digit"
+    });
     return (
       <Card className="border-orange-200 bg-orange-50/10 shadow-sm">
         <CardContent className="p-5 space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
-              <Badge className="bg-orange-100 text-orange-800 border-orange-200">
-                🔥 Active Deal
+              <Badge className={statusConfig.classes}>
+                {statusConfig.label}
               </Badge>
               {selectedBizRow && businesses.length > 1 && (
                 <select
@@ -420,16 +508,26 @@ function CreateDealForm({
                 </select>
               )}
             </div>
-            <div className="text-xs font-semibold text-orange-700 bg-orange-100/50 px-2 py-1 rounded">
-              Expires: {new Date(activeDeal.expiresAt).toLocaleString("en-IN")}
-            </div>
+            {status === "active" && (
+              <div className="text-right">
+                <div className="text-xs text-muted-foreground">Ends in:</div>
+                <DealCountdownSeller expiresAt={currentDeal.expiresAt} />
+                <div className="text-xs text-muted-foreground mt-0.5">Ends on: {endsOnStr}</div>
+              </div>
+            )}
+            {status === "scheduled" && (
+              <div className="text-right text-xs text-blue-700">
+                <div>Starts: {startsOnStr}</div>
+                <div className="text-muted-foreground">Ends: {endsOnStr}</div>
+              </div>
+            )}
           </div>
 
           <div>
-            <h4 className="font-bold text-lg text-foreground">{activeDeal.title}</h4>
-            <p className="text-sm text-muted-foreground mt-1">{activeDeal.description}</p>
-            {activeDeal.offerPrice && (
-              <p className="text-base font-extrabold text-orange-600 mt-2">Offer Price: {activeDeal.offerPrice}</p>
+            <h4 className="font-bold text-lg text-foreground">{currentDeal.title}</h4>
+            <p className="text-sm text-muted-foreground mt-1">{currentDeal.description}</p>
+            {currentDeal.offerPrice && (
+              <p className="text-base font-extrabold text-orange-600 mt-2">Offer Price: {currentDeal.offerPrice}</p>
             )}
           </div>
 
@@ -439,11 +537,11 @@ function CreateDealForm({
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-muted/50 p-3 rounded-lg border border-border/20 text-center">
                 <span className="text-sm text-muted-foreground">👀 Views</span>
-                <p className="text-xl font-extrabold mt-0.5">{activeDeal.views}</p>
+                <p className="text-xl font-extrabold mt-0.5">{currentDeal.views}</p>
               </div>
               <div className="bg-muted/50 p-3 rounded-lg border border-border/20 text-center">
                 <span className="text-sm text-muted-foreground">💬 WhatsApp Clicks</span>
-                <p className="text-xl font-extrabold mt-0.5">{activeDeal.whatsappClicks}</p>
+                <p className="text-xl font-extrabold mt-0.5">{currentDeal.whatsappClicks}</p>
               </div>
             </div>
           </div>
@@ -506,14 +604,28 @@ function CreateDealForm({
           <Textarea placeholder="Describe the offer…" rows={2} className="resize-none bg-white" value={description} onChange={e => setDescription(e.target.value)} />
           <Input placeholder="Discount / Offer Price (e.g. ₹150, 20% OFF)" value={offerPrice} onChange={e => setOfferPrice(e.target.value)} />
           <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Expires at</label>
-            <Input type="datetime-local" min={minDateStr} value={expiresAt} onChange={e => setExpiresAt(e.target.value)} className="bg-white" />
+            <label className="text-xs text-muted-foreground mb-1 block">Start Date & Time <span className="text-muted-foreground/60">(in your local time)</span></label>
+            <Input type="datetime-local" min={nowStr} value={startsAt} onChange={e => handleStartChange(e.target.value)} className="bg-white" />
           </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Expiry Date & Time <span className="text-muted-foreground/60">(must be after start time)</span></label>
+            <Input type="datetime-local" min={startsAt || nowStr} value={expiresAt} onChange={e => handleExpiryChange(e.target.value)} className="bg-white" />
+          </div>
+          {validationError && (
+            <p className="text-xs text-red-600 font-medium flex items-center gap-1">
+              <span>⚠</span> {validationError}
+            </p>
+          )}
           <div className="flex gap-3">
-            <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white" disabled={!title || !description || !expiresAt || !selectedBizId || create.isPending} onClick={() => create.mutate()}>
+            <Button 
+              size="sm" 
+              className="bg-orange-500 hover:bg-orange-600 text-white" 
+              disabled={!title || !description || !expiresAt || !startsAt || !!validationError || !selectedBizId || create.isPending} 
+              onClick={() => create.mutate()}
+            >
               {create.isPending ? "Creating…" : "Create Deal"}
             </Button>
-            <Button size="sm" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button size="sm" variant="outline" onClick={() => { setOpen(false); setValidationError(""); }}>Cancel</Button>
           </div>
         </div>
       </CardContent>

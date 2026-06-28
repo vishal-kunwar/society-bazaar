@@ -1,13 +1,14 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { dailyDealsTable, businessesTable, societiesTable, leadsTable, feedPostsTable } from "@workspace/db";
-import { eq, desc, gt, and, sql } from "drizzle-orm";
+import { eq, desc, gt, lte, and, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/requireAuth";
 import type { AuthedRequest } from "../middlewares/requireAuth";
 import type { Request, Response } from "express";
 
 const router = Router();
 
+// Public: only return deals that are currently active (startsAt <= now < expiresAt)
 router.get("/deals", async (req: Request, res: Response) => {
   const now = new Date();
   const rows = await db
@@ -18,7 +19,8 @@ router.get("/deals", async (req: Request, res: Response) => {
     .where(
       and(
         eq(businessesTable.status, "approved"),
-        gt(dailyDealsTable.expiresAt, now),
+        lte(dailyDealsTable.startsAt, now),   // deal has started
+        gt(dailyDealsTable.expiresAt, now),   // deal has not expired
       ),
     )
     .orderBy(desc(dailyDealsTable.createdAt))
@@ -28,9 +30,25 @@ router.get("/deals", async (req: Request, res: Response) => {
 
 router.post("/deals", requireAuth, async (req: Request, res: Response) => {
   const { userId } = req as AuthedRequest;
-  const { businessId, title, description, offerPrice, expiresAt } = req.body;
-  if (!businessId || !title || !description || !expiresAt) {
-    res.status(400).json({ error: "businessId, title, description, and expiresAt required" });
+  const { businessId, title, description, offerPrice, startsAt, expiresAt } = req.body;
+  if (!businessId || !title || !description || !startsAt || !expiresAt) {
+    res.status(400).json({ error: "businessId, title, description, startsAt, and expiresAt are required" });
+    return;
+  }
+
+  const startsAtDate = new Date(startsAt);
+  const expiresAtDate = new Date(expiresAt);
+  const now = new Date();
+
+  // Validate: expiry must be after start
+  if (expiresAtDate <= startsAtDate) {
+    res.status(400).json({ error: "Expiry time must be after start time." });
+    return;
+  }
+
+  // Validate: expiry must be in the future
+  if (expiresAtDate <= now) {
+    res.status(400).json({ error: "Expiry time must be in the future." });
     return;
   }
 
@@ -45,9 +63,8 @@ router.post("/deals", requireAuth, async (req: Request, res: Response) => {
     return;
   }
 
-  // 1. Check if there is already an active deal for this business
-  const now = new Date();
-  const activeDeals = await db
+  // 1. Check if there is already a non-expired deal for this business
+  const existingDeals = await db
     .select()
     .from(dailyDealsTable)
     .where(
@@ -58,8 +75,8 @@ router.post("/deals", requireAuth, async (req: Request, res: Response) => {
     )
     .limit(1);
 
-  if (activeDeals.length > 0) {
-    res.status(400).json({ error: "An active daily deal already exists for this business." });
+  if (existingDeals.length > 0) {
+    res.status(400).json({ error: "An active or scheduled daily deal already exists for this business." });
     return;
   }
 
@@ -89,13 +106,17 @@ router.post("/deals", requireAuth, async (req: Request, res: Response) => {
       title,
       description,
       offerPrice: offerPrice || null,
-      expiresAt: new Date(expiresAt),
+      startsAt: startsAtDate,
+      expiresAt: expiresAtDate,
     })
     .returning();
 
   // 4. Automatically publish as a post to the Society Feed
+  // Use UTC ISO strings so the feed post body is timezone-neutral
   try {
-    const feedBody = `${description}${offerPrice ? `\n\n💰 Offer Price: ${offerPrice}` : ""}\n⏰ Expires at: ${new Date(expiresAt).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}`;
+    const startsDisplay = startsAtDate.toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    const expiresDisplay = expiresAtDate.toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    const feedBody = `${description}${offerPrice ? `\n\n💰 Offer Price: ${offerPrice}` : ""}\n\n🕐 Starts: ${startsDisplay} IST\n⏰ Ends: ${expiresDisplay} IST`;
     await db
       .insert(feedPostsTable)
       .values({

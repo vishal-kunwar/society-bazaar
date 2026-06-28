@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { businessesTable, societiesTable, reviewsTable, leadsTable, dailyDealsTable } from "@workspace/db";
-import { eq, and, desc, sql, gt } from "drizzle-orm";
+import { eq, and, desc, sql, gt, lte } from "drizzle-orm";
 import { requireAuth } from "../middlewares/requireAuth";
 import type { AuthedRequest } from "../middlewares/requireAuth";
 import type { Request, Response } from "express";
@@ -83,14 +83,16 @@ router.get("/businesses/:id", async (req: Request, res: Response) => {
     .where(eq(reviewsTable.businessId, id))
     .orderBy(desc(reviewsTable.createdAt));
 
-  // Fetch active daily deal if exists
+  // Fetch active daily deal for buyers: startsAt <= now < expiresAt
+  const now = new Date();
   const activeDeals = await db
     .select()
     .from(dailyDealsTable)
     .where(
       and(
         eq(dailyDealsTable.businessId, id),
-        gt(dailyDealsTable.expiresAt, new Date())
+        lte(dailyDealsTable.startsAt, now),
+        gt(dailyDealsTable.expiresAt, now)
       )
     )
     .limit(1);
@@ -251,16 +253,18 @@ router.get("/my-businesses", requireAuth, async (req: Request, res: Response) =>
     const trialExpired = !isPro && (row.leadCount >= 25 || daysSinceCreated >= 90);
     const daysRemaining = Math.max(0, 90 - Math.floor(daysSinceCreated));
     
-    // Fetch active deal
+    // Fetch any non-expired deal for the seller (includes scheduled + active)
+    const sellerNow = new Date();
     const activeDeals = await db
       .select()
       .from(dailyDealsTable)
       .where(
         and(
           eq(dailyDealsTable.businessId, row.business.id),
-          gt(dailyDealsTable.expiresAt, new Date())
+          gt(dailyDealsTable.expiresAt, sellerNow)
         )
       )
+      .orderBy(desc(dailyDealsTable.startsAt))
       .limit(1);
     const activeDeal = activeDeals[0] || null;
 

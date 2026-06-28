@@ -55,12 +55,23 @@ function DealCountdown({ expiresAt }: { expiresAt: string }) {
     const t = setInterval(() => setTime(getTimeRemaining(expiresAt)), 1000);
     return () => clearInterval(t);
   }, [expiresAt]);
+
+  const endsOnStr = new Date(expiresAt).toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "numeric", month: "short", year: "numeric",
+    hour: "2-digit", minute: "2-digit"
+  });
+
   if (!time) return <span className="text-xs text-red-500 font-semibold">Expired</span>;
-  if (time.days > 0) return <span className="text-xs font-bold text-orange-700">{time.days}d {time.hours}h left</span>;
   return (
-    <span className="text-xs font-bold text-red-600 tabular-nums">
-      {String(time.hours).padStart(2, "0")}:{String(time.minutes).padStart(2, "0")}:{String(time.seconds).padStart(2, "0")} left
-    </span>
+    <div className="text-right">
+      <div className="text-xs text-muted-foreground">Ends in:</div>
+      {time.days > 0
+        ? <span className="text-xs font-bold text-orange-700">{time.days}d {time.hours}h</span>
+        : <span className="text-xs font-bold text-red-600 tabular-nums">{String(time.hours).padStart(2, "0")}:{String(time.minutes).padStart(2, "0")}:{String(time.seconds).padStart(2, "0")}</span>
+      }
+      <div className="text-[10px] text-muted-foreground/70">{endsOnStr}</div>
+    </div>
   );
 }
 

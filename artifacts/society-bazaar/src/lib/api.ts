@@ -115,6 +115,7 @@ export interface DailyDeal {
   offerPrice?: string | null;
   views: number;
   whatsappClicks: number;
+  startsAt: string;
   expiresAt: string;
   createdAt: string;
 }
@@ -220,7 +221,7 @@ export const api = {
   },
   deals: {
     list: () => request<DealRow[]>("/deals"),
-    create: (data: { businessId: number; title: string; description: string; offerPrice?: string; expiresAt: string }) =>
+    create: (data: { businessId: number; title: string; description: string; offerPrice?: string; startsAt: string; expiresAt: string }) =>
       request<DailyDeal>("/deals", { method: "POST", body: JSON.stringify(data) }),
     trackView: (id: number) => request<{ success: boolean; views: number }>(`/deals/${id}/view`, { method: "POST" }),
     trackClick: (id: number) => request<{ success: boolean; whatsappClicks: number }>(`/deals/${id}/click`, { method: "POST" }),
