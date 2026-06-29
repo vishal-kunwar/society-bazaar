@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { Upload, X, Loader2, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@clerk/react";
 
 interface ImageUploadProps {
   /** Current image URL (can be empty string) */
@@ -25,6 +26,7 @@ export function ImageUpload({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { getToken } = useAuth();
 
   async function handleFile(file: File) {
     setError(null);
@@ -32,9 +34,14 @@ export function ImageUpload({
     try {
       const formData = new FormData();
       formData.append("file", file);
+      
+      const token = await getToken();
 
       const res = await fetch("/api/upload", {
         method: "POST",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: formData,
       });
 
