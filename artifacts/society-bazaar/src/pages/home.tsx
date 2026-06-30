@@ -363,8 +363,8 @@ export default function Home() {
               Discover trusted local businesses around you.
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-4 md:mb-10">
-              Find home chefs, tutors, bakers, tailors and more around you.
-            </p>
+               Find home kitchens, tutors, bakers, tailors and more — all in one place.
+             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 size="lg"
