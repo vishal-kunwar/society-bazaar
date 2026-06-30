@@ -240,6 +240,70 @@ function RejectionDialog({
   );
 }
 
+// ─── End Deal Dialog ────────────────────────────────────────────────────────
+function EndDealDialog({
+  isOpen,
+  onClose,
+  onConfirm,
+  isPending,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (reason: string) => void;
+  isPending: boolean;
+}) {
+  const [reason, setReason] = useState("");
+
+  useEffect(() => {
+    if (!isOpen) setReason("");
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[150] bg-black/50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-background rounded-2xl shadow-2xl w-full max-w-md p-6 border border-border/50"
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+            <XCircle className="w-5 h-5 text-red-600" />
+          </div>
+          <div>
+            <h3 className="font-bold text-lg">End Daily Deal</h3>
+            <p className="text-xs text-muted-foreground">This will immediately expire the deal for all buyers.</p>
+          </div>
+        </div>
+        <label className="block text-sm font-semibold mb-2">
+          Reason for Ending Deal <span className="text-red-500">*</span>
+        </label>
+        <Textarea
+          placeholder="Specify why you are ending this deal..."
+          className="mb-4 bg-muted/30 border-border/60"
+          value={reason}
+          onChange={e => setReason(e.target.value)}
+        />
+        <div className="flex justify-end gap-3">
+          <Button variant="outline" size="sm" onClick={onClose} disabled={isPending}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            disabled={!reason.trim() || isPending}
+            onClick={() => onConfirm(reason)}
+          >
+            {isPending ? "Ending..." : "End Deal"}
+          </Button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+
 // ─── Listing Review Modal ────────────────────────────────────────────────────
 function ListingReviewModal({
   rows,
@@ -733,6 +797,8 @@ export default function AdminDashboard() {
   const [rejectTargetId, setRejectTargetId] = useState<number | null>(null);
   const [approveTargetId, setApproveTargetId] = useState<number | null>(null);
 
+  const [endDealTargetId, setEndDealTargetId] = useState<number | null>(null);
+
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["admin-stats"],
     queryFn: () => api.admin.stats(),
@@ -741,7 +807,7 @@ export default function AdminDashboard() {
   const { data: businesses, isLoading: bizLoading } = useQuery({
     queryKey: ["admin-businesses", activeTab],
     queryFn: () => api.admin.businesses(activeTab),
-    enabled: activeTab !== "payments",
+    enabled: activeTab !== "payments" && activeTab !== "deals",
   });
 
   const updateStatus = useMutation({
@@ -772,6 +838,24 @@ export default function AdminDashboard() {
     },
     onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
+
+  const { data: adminDeals, isLoading: dealsLoading } = useQuery({
+    queryKey: ["admin-deals"],
+    queryFn: () => api.admin.deals(),
+    enabled: activeTab === "deals",
+  });
+
+  const adminEndDeal = useMutation({
+    mutationFn: ({ id, reason }: { id: number; reason?: string }) =>
+      api.admin.endDeal(id, reason),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-deals"] });
+      toast({ title: "Daily Deal ended successfully ✅" });
+      setEndDealTargetId(null);
+    },
+    onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
 
   const bizRows = (businesses ?? []) as BizRow[];
 
@@ -876,6 +960,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="approved">Approved</TabsTrigger>
             <TabsTrigger value="rejected">Rejected</TabsTrigger>
             <TabsTrigger value="payments">Payments</TabsTrigger>
+            <TabsTrigger value="deals">Daily Deals</TabsTrigger>
           </TabsList>
 
           {/* Payments Tab */}
@@ -906,6 +991,64 @@ export default function AdminDashboard() {
                       </Button>
                     ) : (
                       <Badge variant="secondary" className="bg-green-100 text-green-800">Approved</Badge>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </TabsContent>
+
+          {/* Daily Deals Tab */}
+          <TabsContent value="deals">
+            {dealsLoading && <div className="grid gap-4">{[1, 2].map(i => <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />)}</div>}
+            {!dealsLoading && (!adminDeals || adminDeals.length === 0) && (
+              <div className="text-center py-16 text-muted-foreground">No daily deals found.</div>
+            )}
+            {!dealsLoading && adminDeals?.map((row) => {
+              const { deal, business, society, status } = row;
+              const statusConfig = {
+                scheduled: { label: "⏰ Scheduled", classes: "bg-blue-100 text-blue-800 border-blue-200" },
+                active:    { label: "🔥 Active",    classes: "bg-orange-100 text-orange-800 border-orange-200" },
+                expired:   { label: "✓ Expired",   classes: "bg-gray-100 text-gray-600 border-gray-200" },
+              }[status] || { label: "✓ Expired", classes: "bg-gray-100 text-gray-600 border-gray-200" };
+
+              return (
+                <Card key={deal.id} className="mb-4 border-border/50">
+                  <CardContent className="p-5 flex flex-col md:flex-row justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-bold text-lg">{business.businessName}</h3>
+                        <Badge className={`text-xs border ${statusConfig.classes}`}>
+                          {statusConfig.label}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Owner: <span className="text-foreground font-medium">{business.ownerName}</span>
+                        {society && ` · ${society.name}, ${society.city}`}
+                      </p>
+                      <div className="bg-muted/30 border border-border/20 p-3 rounded-lg mt-2 space-y-1">
+                        <p className="font-semibold text-sm">{deal.title}</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{deal.description}</p>
+                        {deal.offerPrice && (
+                          <p className="text-xs font-bold text-orange-600">Offer Price: {deal.offerPrice}</p>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground pt-1 flex flex-wrap gap-x-4 gap-y-1">
+                        <span>Starts: {new Date(deal.startsAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} IST</span>
+                        <span>Expires: {new Date(deal.expiresAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} IST</span>
+                      </div>
+                    </div>
+                    {status !== "expired" && (
+                      <div className="self-start md:self-center shrink-0">
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          disabled={adminEndDeal.isPending}
+                          onClick={() => setEndDealTargetId(deal.id)}
+                        >
+                          End Deal
+                        </Button>
+                      </div>
                     )}
                   </CardContent>
                 </Card>
@@ -968,6 +1111,15 @@ export default function AdminDashboard() {
         onConfirm={handleConfirmApproval}
         isPending={updateStatus.isPending}
       />
+
+      {/* End Deal Dialog */}
+      <EndDealDialog
+        isOpen={endDealTargetId !== null}
+        onClose={() => setEndDealTargetId(null)}
+        onConfirm={(reason) => adminEndDeal.mutate({ id: endDealTargetId!, reason })}
+        isPending={adminEndDeal.isPending}
+      />
+
     </div>
   );
 }

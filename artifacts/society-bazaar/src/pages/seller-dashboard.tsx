@@ -371,6 +371,8 @@ function CreateDealForm({
   onUpgrade: (id: number) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [confirmEnd, setConfirmEnd] = useState(false);
   const [selectedBizId, setSelectedBizId] = useState<number | null>(businesses[0]?.business?.id ?? null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -395,7 +397,6 @@ function CreateDealForm({
 
   const create = useMutation({
     mutationFn: () => {
-      // Re-validate before submit
       const startD = new Date(startsAt);
       const expD = new Date(expiresAt);
       if (expD <= startD) throw new Error("Expiry time must be after start time.");
@@ -420,6 +421,54 @@ function CreateDealForm({
       toast({ title: "Error", description: e.message, variant: "destructive" });
     },
   });
+
+  const update = useMutation({
+    mutationFn: () => {
+      const startD = new Date(startsAt);
+      const expD = new Date(expiresAt);
+      if (expD <= startD) throw new Error("Expiry time must be after start time.");
+      if (expD <= new Date()) throw new Error("Expiry time must be in the future.");
+      return api.deals.update(currentDeal!.id, {
+        title,
+        description,
+        offerPrice: offerPrice || undefined,
+        startsAt: startD.toISOString(),
+        expiresAt: expD.toISOString(),
+      });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["my-businesses"] });
+      qc.invalidateQueries({ queryKey: ["deals"] });
+      setEditMode(false); setValidationError("");
+      toast({ title: "Deal updated successfully." });
+    },
+    onError: (e: Error) => {
+      setValidationError(e.message);
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    },
+  });
+
+  const endDeal = useMutation({
+    mutationFn: () => api.deals.end(currentDeal!.id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["my-businesses"] });
+      qc.invalidateQueries({ queryKey: ["deals"] });
+      setConfirmEnd(false);
+      toast({ title: "Deal ended. Buyers will no longer see this deal." });
+    },
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const openEditMode = () => {
+    if (!currentDeal) return;
+    setTitle(currentDeal.title);
+    setDescription(currentDeal.description);
+    setOfferPrice(currentDeal.offerPrice ?? "");
+    setStartsAt(toLocalDatetimeString(new Date(currentDeal.startsAt)));
+    setExpiresAt(toLocalDatetimeString(new Date(currentDeal.expiresAt)));
+    setValidationError("");
+    setEditMode(true);
+  };
 
   const handleExpiryChange = (val: string) => {
     setExpiresAt(val);
@@ -470,8 +519,8 @@ function CreateDealForm({
     );
   }
 
-  // If there is a current deal (scheduled or active), show it with status + analytics
-  if (currentDeal) {
+  // If there is a current deal (scheduled or active), show it with status + analytics + actions
+  if (currentDeal && !editMode) {
     const status = getDealStatus(currentDeal);
     const statusConfig = {
       scheduled: { label: "⏰ Scheduled", classes: "bg-blue-100 text-blue-800 border-blue-200" },
@@ -489,60 +538,162 @@ function CreateDealForm({
       hour: "2-digit", minute: "2-digit"
     });
     return (
-      <Card className="border-orange-200 bg-orange-50/10 shadow-sm">
-        <CardContent className="p-5 space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2">
-              <Badge className={statusConfig.classes}>
-                {statusConfig.label}
-              </Badge>
-              {selectedBizRow && businesses.length > 1 && (
-                <select
-                  className="rounded-md border border-input bg-background px-2 py-1 text-xs"
-                  value={selectedBizId ?? ""}
-                  onChange={e => setSelectedBizId(Number(e.target.value))}
-                >
-                  {businesses.map(r => (
-                    <option key={r.business.id} value={r.business.id}>{r.business.businessName}</option>
-                  ))}
-                </select>
+      <>
+        <Card className="border-orange-200 bg-orange-50/10 shadow-sm">
+          <CardContent className="p-5 space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <Badge className={statusConfig.classes}>
+                  {statusConfig.label}
+                </Badge>
+                {selectedBizRow && businesses.length > 1 && (
+                  <select
+                    className="rounded-md border border-input bg-background px-2 py-1 text-xs"
+                    value={selectedBizId ?? ""}
+                    onChange={e => setSelectedBizId(Number(e.target.value))}
+                  >
+                    {businesses.map(r => (
+                      <option key={r.business.id} value={r.business.id}>{r.business.businessName}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+              {status === "active" && (
+                <div className="text-right">
+                  <div className="text-xs text-muted-foreground">Ends in:</div>
+                  <DealCountdownSeller expiresAt={currentDeal.expiresAt} />
+                  <div className="text-xs text-muted-foreground mt-0.5">Ends on: {endsOnStr}</div>
+                </div>
+              )}
+              {status === "scheduled" && (
+                <div className="text-right text-xs text-blue-700">
+                  <div>Starts: {startsOnStr}</div>
+                  <div className="text-muted-foreground">Ends: {endsOnStr}</div>
+                </div>
               )}
             </div>
-            {status === "active" && (
-              <div className="text-right">
-                <div className="text-xs text-muted-foreground">Ends in:</div>
-                <DealCountdownSeller expiresAt={currentDeal.expiresAt} />
-                <div className="text-xs text-muted-foreground mt-0.5">Ends on: {endsOnStr}</div>
-              </div>
-            )}
-            {status === "scheduled" && (
-              <div className="text-right text-xs text-blue-700">
-                <div>Starts: {startsOnStr}</div>
-                <div className="text-muted-foreground">Ends: {endsOnStr}</div>
-              </div>
-            )}
-          </div>
 
-          <div>
-            <h4 className="font-bold text-lg text-foreground">{currentDeal.title}</h4>
-            <p className="text-sm text-muted-foreground mt-1">{currentDeal.description}</p>
-            {currentDeal.offerPrice && (
-              <p className="text-base font-extrabold text-orange-600 mt-2">Offer Price: {currentDeal.offerPrice}</p>
-            )}
-          </div>
+            <div>
+              <h4 className="font-bold text-lg text-foreground">{currentDeal.title}</h4>
+              <p className="text-sm text-muted-foreground mt-1">{currentDeal.description}</p>
+              {currentDeal.offerPrice && (
+                <p className="text-base font-extrabold text-orange-600 mt-2">Offer Price: {currentDeal.offerPrice}</p>
+              )}
+            </div>
 
-          {/* Performance Analytics */}
-          <div className="border-t border-border/40 pt-4">
-            <h5 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Deal Performance</h5>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-muted/50 p-3 rounded-lg border border-border/20 text-center">
-                <span className="text-sm text-muted-foreground">👀 Views</span>
-                <p className="text-xl font-extrabold mt-0.5">{currentDeal.views}</p>
+            {/* Performance Analytics */}
+            <div className="border-t border-border/40 pt-4">
+              <h5 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Deal Performance</h5>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-muted/50 p-3 rounded-lg border border-border/20 text-center">
+                  <span className="text-sm text-muted-foreground">👀 Views</span>
+                  <p className="text-xl font-extrabold mt-0.5">{currentDeal.views}</p>
+                </div>
+                <div className="bg-muted/50 p-3 rounded-lg border border-border/20 text-center">
+                  <span className="text-sm text-muted-foreground">💬 WhatsApp Clicks</span>
+                  <p className="text-xl font-extrabold mt-0.5">{currentDeal.whatsappClicks}</p>
+                </div>
               </div>
-              <div className="bg-muted/50 p-3 rounded-lg border border-border/20 text-center">
-                <span className="text-sm text-muted-foreground">💬 WhatsApp Clicks</span>
-                <p className="text-xl font-extrabold mt-0.5">{currentDeal.whatsappClicks}</p>
+            </div>
+
+            {/* Seller Actions */}
+            <div className="border-t border-border/40 pt-4 flex gap-3">
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 border-orange-300 text-orange-700 hover:bg-orange-50"
+                onClick={openEditMode}
+              >
+                <Pencil className="w-3.5 h-3.5 mr-1.5" />
+                Edit Deal
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
+                onClick={() => setConfirmEnd(true)}
+              >
+                <X className="w-3.5 h-3.5 mr-1.5" />
+                End Deal Now
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* End Deal Confirmation Modal */}
+        {confirmEnd && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="bg-background rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-border">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                  <X className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base">End this Daily Deal?</h3>
+                  <p className="text-sm text-muted-foreground mt-0.5">This will immediately remove the deal from all buyer pages.</p>
+                </div>
               </div>
+              <div className="bg-muted/50 rounded-xl p-3 mb-5 text-sm">
+                <p className="font-semibold">{currentDeal.title}</p>
+                {currentDeal.offerPrice && <p className="text-muted-foreground text-xs mt-0.5">{currentDeal.offerPrice}</p>}
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  disabled={endDeal.isPending}
+                  onClick={() => endDeal.mutate()}
+                >
+                  {endDeal.isPending ? "Ending…" : "Yes, End Deal"}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  disabled={endDeal.isPending}
+                  onClick={() => setConfirmEnd(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // Edit mode: pre-filled form for updating an existing deal
+  if (editMode && currentDeal) {
+    return (
+      <Card className="border-orange-300 bg-orange-50/5">
+        <CardContent className="p-5">
+          <h4 className="font-bold mb-3 text-orange-800">Edit Daily Deal</h4>
+          <div className="space-y-3">
+            <Input placeholder="Deal title (e.g. Buy 5 get 1 free)" value={title} onChange={e => setTitle(e.target.value)} />
+            <Textarea placeholder="Describe the offer…" rows={2} className="resize-none bg-white" value={description} onChange={e => setDescription(e.target.value)} />
+            <Input placeholder="Discount / Offer Price (e.g. ₹150, 20% OFF)" value={offerPrice} onChange={e => setOfferPrice(e.target.value)} />
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Start Date & Time <span className="text-muted-foreground/60">(in your local time)</span></label>
+              <Input type="datetime-local" value={startsAt} onChange={e => handleStartChange(e.target.value)} className="bg-white" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Expiry Date & Time <span className="text-muted-foreground/60">(must be after start time)</span></label>
+              <Input type="datetime-local" min={startsAt || nowStr} value={expiresAt} onChange={e => handleExpiryChange(e.target.value)} className="bg-white" />
+            </div>
+            {validationError && (
+              <p className="text-xs text-red-600 font-medium flex items-center gap-1">
+                <span>⚠</span> {validationError}
+              </p>
+            )}
+            <div className="flex gap-3">
+              <Button 
+                size="sm" 
+                className="bg-orange-500 hover:bg-orange-600 text-white" 
+                disabled={!title || !description || !expiresAt || !startsAt || !!validationError || update.isPending} 
+                onClick={() => update.mutate()}
+              >
+                {update.isPending ? "Saving…" : "Save Changes"}
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => { setEditMode(false); setValidationError(""); }}>Cancel</Button>
             </div>
           </div>
         </CardContent>

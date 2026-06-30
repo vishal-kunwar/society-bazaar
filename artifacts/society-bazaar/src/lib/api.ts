@@ -126,6 +126,13 @@ export interface DealRow {
   society: Society | null;
 }
 
+export interface AdminDealRow {
+  deal: DailyDeal;
+  business: Business;
+  society: Society | null;
+  status: "scheduled" | "active" | "expired";
+}
+
 export interface FavouriteRow {
   fav: { id: number; clerkUserId: string; businessId: number; createdAt: string };
   business: Business;
@@ -223,6 +230,10 @@ export const api = {
     list: () => request<DealRow[]>("/deals"),
     create: (data: { businessId: number; title: string; description: string; offerPrice?: string; startsAt: string; expiresAt: string }) =>
       request<DailyDeal>("/deals", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: number, data: { title: string; description: string; offerPrice?: string; startsAt: string; expiresAt: string }) =>
+      request<DailyDeal>(`/deals/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    end: (id: number) =>
+      request<{ success: boolean; deal: DailyDeal }>(`/deals/${id}/end`, { method: "PATCH" }),
     trackView: (id: number) => request<{ success: boolean; views: number }>(`/deals/${id}/view`, { method: "POST" }),
     trackClick: (id: number) => request<{ success: boolean; whatsappClicks: number }>(`/deals/${id}/click`, { method: "POST" }),
   },
@@ -250,6 +261,12 @@ export const api = {
       }),
     payments: () => request<any[]>("/admin/payments"),
     updatePayment: (id: number) => request(`/admin/payments/${id}/approve`, { method: "PATCH" }),
+    deals: () => request<AdminDealRow[]>("/admin/deals"),
+    endDeal: (id: number, reason?: string) =>
+      request<{ success: boolean; deal: DailyDeal; reason: string | null }>(`/admin/deals/${id}`, {
+        method: "DELETE",
+        body: JSON.stringify({ reason }),
+      }),
   },
   products: {
     list: (businessId: number) => request<Product[]>(`/businesses/${businessId}/products`),

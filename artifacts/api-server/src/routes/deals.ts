@@ -5,6 +5,7 @@ import { eq, desc, gt, lte, and, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/requireAuth";
 import type { AuthedRequest } from "../middlewares/requireAuth";
 import type { Request, Response } from "express";
+import { requireAdmin } from "../middlewares/requireAdmin";
 
 const router = Router();
 
@@ -159,6 +160,128 @@ router.post("/deals/:id/click", async (req: Request, res: Response) => {
     return;
   }
   res.json({ success: true, whatsappClicks: updated.whatsappClicks });
+});
+
+// ── Seller: Edit own deal ─────────────────────────────────────────────────────
+router.put("/deals/:id", requireAuth, async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  const { userId } = req as AuthedRequest;
+  const { title, description, offerPrice, startsAt, expiresAt } = req.body;
+
+  if (!title || !description || !startsAt || !expiresAt) {
+    res.status(400).json({ error: "title, description, startsAt, and expiresAt are required" });
+    return;
+  }
+
+  const startsAtDate = new Date(startsAt);
+  const expiresAtDate = new Date(expiresAt);
+
+  if (expiresAtDate <= startsAtDate) {
+    res.status(400).json({ error: "Expiry time must be after start time." });
+    return;
+  }
+  if (expiresAtDate <= new Date()) {
+    res.status(400).json({ error: "Expiry time must be in the future." });
+    return;
+  }
+
+  const [existing] = await db
+    .select()
+    .from(dailyDealsTable)
+    .where(and(eq(dailyDealsTable.id, id), eq(dailyDealsTable.clerkUserId, userId)))
+    .limit(1);
+
+  if (!existing) {
+    res.status(404).json({ error: "Deal not found or not authorized" });
+    return;
+  }
+
+  const [updated] = await db
+    .update(dailyDealsTable)
+    .set({ title, description, offerPrice: offerPrice || null, startsAt: startsAtDate, expiresAt: expiresAtDate })
+    .where(eq(dailyDealsTable.id, id))
+    .returning();
+
+  res.json(updated);
+});
+
+// ── Seller: End own deal immediately ─────────────────────────────────────────
+router.patch("/deals/:id/end", requireAuth, async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  const { userId } = req as AuthedRequest;
+
+  const [existing] = await db
+    .select()
+    .from(dailyDealsTable)
+    .where(and(eq(dailyDealsTable.id, id), eq(dailyDealsTable.clerkUserId, userId)))
+    .limit(1);
+
+  if (!existing) {
+    res.status(404).json({ error: "Deal not found or not authorized" });
+    return;
+  }
+
+  // Set expiresAt to 1 second in the past → deal immediately invisible to all buyers
+  const pastDate = new Date(Date.now() - 1000);
+  const [updated] = await db
+    .update(dailyDealsTable)
+    .set({ expiresAt: pastDate })
+    .where(eq(dailyDealsTable.id, id))
+    .returning();
+
+  res.json({ success: true, deal: updated });
+});
+
+// ── Admin: List all active + scheduled deals ──────────────────────────────────
+router.get("/admin/deals", requireAdmin, async (_req: Request, res: Response) => {
+  const rows = await db
+    .select({ deal: dailyDealsTable, business: businessesTable, society: societiesTable })
+    .from(dailyDealsTable)
+    .innerJoin(businessesTable, eq(dailyDealsTable.businessId, businessesTable.id))
+    .leftJoin(societiesTable, eq(businessesTable.societyId, societiesTable.id))
+    .where(gt(dailyDealsTable.expiresAt, new Date(Date.now() - 24 * 60 * 60 * 1000))) // include recent 24h
+    .orderBy(desc(dailyDealsTable.createdAt));
+
+  const now = Date.now();
+  const enriched = rows.map(r => ({
+    ...r,
+    status:
+      now < new Date(r.deal.startsAt).getTime() ? "scheduled"
+      : now < new Date(r.deal.expiresAt).getTime() ? "active"
+      : "expired",
+  }));
+
+  res.json(enriched);
+});
+
+// ── Admin: End/remove any deal ────────────────────────────────────────────────
+router.delete("/admin/deals/:id", requireAdmin, async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  const { reason } = req.body ?? {};
+
+  const [existing] = await db
+    .select()
+    .from(dailyDealsTable)
+    .where(eq(dailyDealsTable.id, id))
+    .limit(1);
+
+  if (!existing) {
+    res.status(404).json({ error: "Deal not found" });
+    return;
+  }
+
+  if (reason?.trim()) {
+    console.log(`[Admin] Deal #${id} ("${existing.title}") ended by admin. Reason: ${reason.trim()}`);
+  }
+
+  const pastDate = new Date(Date.now() - 1000);
+  const [updated] = await db
+    .update(dailyDealsTable)
+    .set({ expiresAt: pastDate })
+    .where(eq(dailyDealsTable.id, id))
+    .returning();
+
+  res.json({ success: true, deal: updated, reason: reason?.trim() || null });
 });
 
 export default router;
