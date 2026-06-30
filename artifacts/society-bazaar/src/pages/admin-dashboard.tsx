@@ -785,6 +785,11 @@ export default function AdminDashboard() {
   const qc = useQueryClient();
   const { toast } = useToast();
 
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ["admin-stats"],
+    queryFn: () => api.admin.stats(),
+  });
+
   const handleSignOut = async () => {
     try {
       await fetch(`${import.meta.env.VITE_API_URL || "/api"}/admin/logout`, { method: "POST", credentials: "include" });
@@ -819,11 +824,6 @@ export default function AdminDashboard() {
       setSelectedDistLocality("");
     }
   }, [selectedDistCity, stats?.sellerDistribution]);
-
-  const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ["admin-stats"],
-    queryFn: () => api.admin.stats(),
-  });
 
   const { data: businesses, isLoading: bizLoading } = useQuery({
     queryKey: ["admin-businesses", activeTab],
