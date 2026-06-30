@@ -36,7 +36,7 @@ const STATUS_ICONS: Record<string, React.ElementType> = {
 
 import type { BusinessRow } from "@/lib/api";
 
-function SubscriptionTracker({ biz, approvedCount, onUpgrade }: { biz: BusinessRow; approvedCount: number; onUpgrade: (id: number) => void }) {
+function SubscriptionTracker({ biz, approvedCount, approvedBusinesses, onUpgrade }: { biz: BusinessRow; approvedCount: number; approvedBusinesses?: BusinessRow[]; onUpgrade: (id: number) => void }) {
   const isPro = biz.business.subscriptionPlan === "pro";
   const trialOver = biz.trialExpired;
   const leadsUsed = biz.sellerLeads ?? biz.leadCount;
@@ -84,6 +84,18 @@ function SubscriptionTracker({ biz, approvedCount, onUpgrade }: { biz: BusinessR
                       year: "numeric"
                     })}
                   </p>
+                )}
+                {approvedBusinesses && approvedBusinesses.length > 0 && (
+                  <div className="mt-2 text-[11px] p-2 rounded-lg bg-green-500/10 border border-green-500/20 max-w-xs">
+                    <p className="font-semibold text-green-800 mb-1">My Businesses:</p>
+                    <ul className="space-y-0.5">
+                      {approvedBusinesses.map(r => (
+                        <li key={r.business.id} className="flex items-center gap-1 text-foreground font-medium">
+                          <span className="text-green-600 text-[10px]">✓</span> {r.business.businessName}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
               
@@ -173,6 +185,18 @@ function SubscriptionTracker({ biz, approvedCount, onUpgrade }: { biz: BusinessR
                 <p className="text-xs font-semibold text-muted-foreground mt-0.5">
                   Active Businesses: {approvedCount}
                 </p>
+                {approvedBusinesses && approvedBusinesses.length > 0 && (
+                  <div className="mt-2 text-[11px] p-2 rounded-lg bg-muted/40 border border-border/30 max-w-xs">
+                    <p className="font-semibold text-muted-foreground mb-1">My Businesses:</p>
+                    <ul className="space-y-0.5">
+                      {approvedBusinesses.map(r => (
+                        <li key={r.business.id} className="flex items-center gap-1 text-foreground font-medium">
+                          <span className="text-green-600 text-[10px]">✓</span> {r.business.businessName}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-3">
@@ -1008,6 +1032,7 @@ export default function SellerDashboard() {
             <SubscriptionTracker
               biz={approvedBusinesses[0]}
               approvedCount={approvedBusinesses.length}
+              approvedBusinesses={approvedBusinesses}
               onUpgrade={setUpgradeBizId}
             />
           )}
