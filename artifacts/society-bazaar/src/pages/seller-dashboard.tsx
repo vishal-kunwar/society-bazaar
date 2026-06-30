@@ -399,8 +399,9 @@ function CreateDealForm({
     mutationFn: () => {
       const startD = new Date(startsAt);
       const expD = new Date(expiresAt);
+      const now = new Date(Date.now() - 60000); // 1 minute buffer for latency
+      if (startD < now || expD < now) throw new Error("Please select a future time.");
       if (expD <= startD) throw new Error("Expiry time must be after start time.");
-      if (expD <= new Date()) throw new Error("Expiry time must be in the future.");
       return api.deals.create({ 
         businessId: selectedBizId!, 
         title, 
@@ -426,8 +427,9 @@ function CreateDealForm({
     mutationFn: () => {
       const startD = new Date(startsAt);
       const expD = new Date(expiresAt);
+      const now = new Date(Date.now() - 60000); // 1 minute buffer for latency
+      if (startD < now || expD < now) throw new Error("Please select a future time.");
       if (expD <= startD) throw new Error("Expiry time must be after start time.");
-      if (expD <= new Date()) throw new Error("Expiry time must be in the future.");
       return api.deals.update(currentDeal!.id, {
         title,
         description,
@@ -472,10 +474,18 @@ function CreateDealForm({
 
   const handleExpiryChange = (val: string) => {
     setExpiresAt(val);
-    if (val && startsAt && new Date(val) <= new Date(startsAt)) {
+    if (!val) {
+      setValidationError("");
+      return;
+    }
+    const expD = new Date(val);
+    const startD = startsAt ? new Date(startsAt) : null;
+    const now = new Date(Date.now() - 60000); // 1 minute buffer for latency
+
+    if (expD <= now) {
+      setValidationError("Please select a future time.");
+    } else if (startD && expD <= startD) {
       setValidationError("Expiry time must be after start time.");
-    } else if (val && new Date(val) <= new Date()) {
-      setValidationError("Expiry time must be in the future.");
     } else {
       setValidationError("");
     }
@@ -483,7 +493,17 @@ function CreateDealForm({
 
   const handleStartChange = (val: string) => {
     setStartsAt(val);
-    if (expiresAt && new Date(expiresAt) <= new Date(val)) {
+    if (!val) {
+      setValidationError("");
+      return;
+    }
+    const startD = new Date(val);
+    const expD = expiresAt ? new Date(expiresAt) : null;
+    const now = new Date(Date.now() - 60000); // 1 minute buffer for latency
+
+    if (startD <= now) {
+      setValidationError("Please select a future time.");
+    } else if (expD && expD <= startD) {
       setValidationError("Expiry time must be after start time.");
     } else {
       setValidationError("");
@@ -673,7 +693,7 @@ function CreateDealForm({
             <Input placeholder="Discount / Offer Price (e.g. ₹150, 20% OFF)" value={offerPrice} onChange={e => setOfferPrice(e.target.value)} />
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">Start Date & Time <span className="text-muted-foreground/60">(in your local time)</span></label>
-              <Input type="datetime-local" value={startsAt} onChange={e => handleStartChange(e.target.value)} className="bg-white" />
+              <Input type="datetime-local" min={nowStr} value={startsAt} onChange={e => handleStartChange(e.target.value)} className="bg-white" />
             </div>
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">Expiry Date & Time <span className="text-muted-foreground/60">(must be after start time)</span></label>

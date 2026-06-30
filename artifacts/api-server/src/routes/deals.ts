@@ -40,6 +40,13 @@ router.post("/deals", requireAuth, async (req: Request, res: Response) => {
   const startsAtDate = new Date(startsAt);
   const expiresAtDate = new Date(expiresAt);
   const now = new Date();
+  const oneMinAgo = new Date(Date.now() - 60000); // 1 minute buffer for network latency/skew
+
+  // Validate: start time must be in the future
+  if (startsAtDate < oneMinAgo) {
+    res.status(400).json({ error: "Please select a future time." });
+    return;
+  }
 
   // Validate: expiry must be after start
   if (expiresAtDate <= startsAtDate) {
@@ -49,7 +56,7 @@ router.post("/deals", requireAuth, async (req: Request, res: Response) => {
 
   // Validate: expiry must be in the future
   if (expiresAtDate <= now) {
-    res.status(400).json({ error: "Expiry time must be in the future." });
+    res.status(400).json({ error: "Please select a future time." });
     return;
   }
 
@@ -175,13 +182,24 @@ router.put("/deals/:id", requireAuth, async (req: Request, res: Response) => {
 
   const startsAtDate = new Date(startsAt);
   const expiresAtDate = new Date(expiresAt);
+  const now = new Date();
+  const oneMinAgo = new Date(Date.now() - 60000); // 1 minute buffer for network latency/skew
 
+  // Validate: start time must be in the future
+  if (startsAtDate < oneMinAgo) {
+    res.status(400).json({ error: "Please select a future time." });
+    return;
+  }
+
+  // Validate: expiry must be after start
   if (expiresAtDate <= startsAtDate) {
     res.status(400).json({ error: "Expiry time must be after start time." });
     return;
   }
-  if (expiresAtDate <= new Date()) {
-    res.status(400).json({ error: "Expiry time must be in the future." });
+
+  // Validate: expiry must be in the future
+  if (expiresAtDate <= now) {
+    res.status(400).json({ error: "Please select a future time." });
     return;
   }
 

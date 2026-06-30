@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { feedPostsTable, businessesTable, societiesTable } from "@workspace/db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/requireAuth";
 import type { AuthedRequest } from "../middlewares/requireAuth";
 import type { Request, Response } from "express";
@@ -9,7 +9,7 @@ import type { Request, Response } from "express";
 const router = Router();
 
 router.get("/feed", async (req: Request, res: Response) => {
-  const { societyId, limit, offset } = req.query;
+  const { societyId, city, limit, offset } = req.query;
   const parsedLimit = limit ? Math.min(Number(limit), 100) : 20;
   const parsedOffset = offset ? Number(offset) : 0;
 
@@ -22,6 +22,20 @@ router.get("/feed", async (req: Request, res: Response) => {
       and(
         eq(businessesTable.status, "approved"),
         societyId ? eq(businessesTable.societyId, Number(societyId)) : undefined,
+        city ? sql`lower(${societiesTable.city}) = lower(${city as string})` : undefined,
+        sql`
+          (
+            NOT (${feedPostsTable.title} LIKE '🔥 New Daily Deal:%')
+            OR
+            EXISTS (
+              SELECT 1 FROM daily_deals
+              WHERE daily_deals.business_id = ${feedPostsTable.businessId}
+                AND ('🔥 New Daily Deal: ' || daily_deals.title) = ${feedPostsTable.title}
+                AND daily_deals.starts_at <= NOW()
+                AND daily_deals.expires_at > NOW()
+            )
+          )
+        `
       ),
     )
     .orderBy(desc(feedPostsTable.createdAt))

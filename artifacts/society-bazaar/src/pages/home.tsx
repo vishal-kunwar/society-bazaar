@@ -222,8 +222,9 @@ export default function Home() {
     }
   }, [deals]);
   const { data: feed } = useQuery({
-    queryKey: ["feed", selectedSociety],
-    queryFn: () => api.feed.list(selectedSociety !== "all" ? Number(selectedSociety) : undefined),
+    queryKey: ["feed", selectedSociety, city],
+    queryFn: () => api.feed.list(selectedSociety !== "all" ? Number(selectedSociety) : undefined, city || undefined),
+    enabled: !!city,
   });
 
   const handleWhatsApp = useCallback((businessId: number, whatsapp: string) => {

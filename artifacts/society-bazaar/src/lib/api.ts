@@ -219,9 +219,12 @@ export const api = {
       request<Review>("/reviews", { method: "POST", body: JSON.stringify(data) }),
   },
   feed: {
-    list: (societyId?: number) => {
-      const qs = societyId ? `?societyId=${societyId}` : "";
-      return request<FeedPostRow[]>(`/feed${qs}`);
+    list: (societyId?: number, city?: string) => {
+      const qs = new URLSearchParams();
+      if (societyId) qs.set("societyId", String(societyId));
+      if (city) qs.set("city", city);
+      const queryStr = qs.toString() ? `?${qs.toString()}` : "";
+      return request<FeedPostRow[]>(`/feed${queryStr}`);
     },
     create: (data: { businessId: number; title: string; body: string; imageUrl?: string }) =>
       request<FeedPost>("/feed", { method: "POST", body: JSON.stringify(data) }),
