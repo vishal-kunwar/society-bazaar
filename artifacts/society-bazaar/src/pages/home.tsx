@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { Menu, X, Search, MapPin, Utensils, Cake, BookOpen, Dumbbell, Scissors, Sparkles, Wrench, MoreHorizontal, Star, MessageCircle, TrendingUp, Heart, Flame, Clock, Bell, ShoppingBag, Shirt, Palette, Hammer, Dog, Camera, Gift, Monitor, Car, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,173 @@ import { useUser, UserButton } from "@clerk/react";
 
 import { CATEGORY_IMAGES } from "@/lib/constants";
 import { SUPPORTED_CITIES } from "@/lib/cities";
+
+
+// ─── Searchable city selector ──────────────────────────────────────────────
+function SearchableCitySelect({
+  value,
+  onValueChange,
+  cities
+}: {
+  value: string;
+  onValueChange: (city: string) => void;
+  cities: string[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filtered = cities.filter(c =>
+    c.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="relative inline-block text-left" ref={containerRef}>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => { setOpen(!open); setSearch(""); }}
+        className="w-[120px] h-8 text-xs bg-muted/50 border-none justify-between font-normal hover:bg-muted/70 text-foreground"
+      >
+        <span className="truncate">{value || "Select City"}</span>
+        <span className="ml-2 text-muted-foreground/60 text-[9px]">▼</span>
+      </Button>
+
+      {open && (
+        <div className="absolute left-0 mt-1 w-[160px] rounded-md bg-popover text-popover-foreground border border-border shadow-md z-[150] p-1">
+          <Input
+            autoFocus
+            placeholder="Search city..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="h-7 text-xs mb-1 px-2 focus-visible:ring-0 focus-visible:ring-offset-0 bg-background"
+          />
+          <div className="max-h-[200px] overflow-y-auto space-y-0.5">
+            {filtered.length === 0 ? (
+              <div className="text-[11px] text-muted-foreground text-center py-2">
+                No city found
+              </div>
+            ) : (
+              filtered.map(c => (
+                <button
+                  key={c}
+                  onClick={() => {
+                    onValueChange(c);
+                    setOpen(false);
+                  }}
+                  className={`w-full text-left px-2 py-1 text-xs rounded hover:bg-accent hover:text-accent-foreground truncate block ${
+                    value === c ? "bg-accent/50 font-semibold" : ""
+                  }`}
+                >
+                  {c}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Searchable locality selector ──────────────────────────────────────────
+function SearchableLocalitySelect({
+  value,
+  onValueChange,
+  localities
+}: {
+  value: string;
+  onValueChange: (locality: string) => void;
+  localities: string[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filtered = localities.filter(l =>
+    l.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const displayValue = value === "all" ? "All Localities" : value;
+
+  return (
+    <div className="relative inline-block w-full sm:w-48 text-left" ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => { setOpen(!open); setSearch(""); }}
+        className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-left font-normal hover:bg-muted/10 transition-colors text-foreground"
+      >
+        <span className="truncate">{displayValue}</span>
+        <span className="ml-2 text-muted-foreground/70 text-[10px]">▼</span>
+      </button>
+
+      {open && (
+        <div className="absolute left-0 mt-1 w-full min-w-[200px] rounded-md bg-popover text-popover-foreground border border-border shadow-md z-[150] p-1">
+          <Input
+            autoFocus
+            placeholder="Search locality..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="h-8 text-xs mb-1 px-2 focus-visible:ring-0 focus-visible:ring-offset-0 bg-background"
+          />
+          <div className="max-h-[200px] overflow-y-auto space-y-0.5">
+            <button
+              onClick={() => {
+                onValueChange("all");
+                setOpen(false);
+              }}
+              className={`w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent hover:text-accent-foreground block ${
+                value === "all" ? "bg-accent/50 font-semibold" : ""
+              }`}
+            >
+              All Localities
+            </button>
+            {filtered.length === 0 ? (
+              <div className="text-[11px] text-muted-foreground text-center py-2">
+                No locality found
+              </div>
+            ) : (
+              filtered.map(l => (
+                <button
+                  key={l}
+                  onClick={() => {
+                    onValueChange(l);
+                    setOpen(false);
+                  }}
+                  className={`w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent hover:text-accent-foreground truncate block ${
+                    value === l ? "bg-accent/50 font-semibold" : ""
+                  }`}
+                >
+                  {l}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 
 const CATEGORIES = [
@@ -189,13 +356,19 @@ export default function Home() {
     setSelectedSociety("all");
   };
 
-  const { data: allSocietiesInCity } = useQuery({
-    queryKey: ["societies-city", city],
-    queryFn: () => api.societies.list(city || undefined),
-    enabled: !!city
+  const { data: allBusinessesInCity } = useQuery({
+    queryKey: ["businesses-city", city],
+    queryFn: () => api.businesses.list({ city: city || undefined }),
+    enabled: !!city,
   });
 
-  const localities = Array.from(new Set(allSocietiesInCity?.map(s => s.locality).filter(Boolean))) as string[];
+  const localities = Array.from(
+    new Set(
+      allBusinessesInCity
+        ?.map(row => row.society?.locality)
+        .filter(Boolean)
+    )
+  ).sort() as string[];
 
   const { data: societiesInLocality } = useQuery({
     queryKey: ["societies-locality", city, selectedLocality],
@@ -257,16 +430,7 @@ export default function Home() {
       <Navbar
         leftContent={
           city && (
-            <Select value={city} onValueChange={handleCitySelect}>
-              <SelectTrigger className="w-[120px] h-8 text-xs bg-muted/50 border-none">
-                <SelectValue placeholder="City" />
-              </SelectTrigger>
-              <SelectContent>
-                {SUPPORTED_CITIES.map(c => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableCitySelect value={city} onValueChange={handleCitySelect} cities={SUPPORTED_CITIES} />
           )
         }
         rightContent={
@@ -431,20 +595,14 @@ export default function Home() {
               />
             </div>
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-              <Select value={selectedLocality} onValueChange={(val) => {
-                setSelectedLocality(val);
-                setSelectedSociety("all");
-              }}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="All Localities" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Localities</SelectItem>
-                  {localities.sort().map(loc => (
-                    <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableLocalitySelect
+                value={selectedLocality}
+                onValueChange={(val) => {
+                  setSelectedLocality(val);
+                  setSelectedSociety("all");
+                }}
+                localities={localities}
+              />
               <Select value={selectedSociety} onValueChange={setSelectedSociety}>
                 <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="All Societies" />
