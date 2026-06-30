@@ -185,6 +185,96 @@ function SearchableLocalitySelect({
   );
 }
 
+// ─── Searchable society selector ───────────────────────────────────────────
+function SearchableSocietySelect({
+  value,
+  onValueChange,
+  societies
+}: {
+  value: string;
+  onValueChange: (society: string) => void;
+  societies: { id: number; name: string }[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filtered = societies.filter(s =>
+    s.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const selectedSocietyObj = societies.find(s => String(s.id) === value);
+  const displayValue = value === "all" ? "All Societies" : (selectedSocietyObj?.name || value);
+
+  return (
+    <div className="relative inline-block w-full sm:w-48 text-left" ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => { setOpen(!open); setSearch(""); }}
+        className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-left font-normal hover:bg-muted/10 transition-colors text-foreground"
+      >
+        <span className="truncate">{displayValue}</span>
+        <span className="ml-2 text-muted-foreground/70 text-[10px]">▼</span>
+      </button>
+
+      {open && (
+        <div className="absolute left-0 mt-1 w-full min-w-[200px] rounded-md bg-popover text-popover-foreground border border-border shadow-md z-[150] p-1">
+          <Input
+            autoFocus
+            placeholder="Search society..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="h-8 text-xs mb-1 px-2 focus-visible:ring-0 focus-visible:ring-offset-0 bg-background"
+          />
+          <div className="max-h-[200px] overflow-y-auto space-y-0.5">
+            <button
+              onClick={() => {
+                onValueChange("all");
+                setOpen(false);
+              }}
+              className={`w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent hover:text-accent-foreground block ${
+                value === "all" ? "bg-accent/50 font-semibold" : ""
+              }`}
+            >
+              All Societies
+            </button>
+            {filtered.length === 0 ? (
+              <div className="text-[11px] text-muted-foreground text-center py-2">
+                No society found
+              </div>
+            ) : (
+              filtered.map(s => (
+                <button
+                  key={s.id}
+                  onClick={() => {
+                    onValueChange(String(s.id));
+                    setOpen(false);
+                  }}
+                  className={`w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent hover:text-accent-foreground truncate block ${
+                    value === String(s.id) ? "bg-accent/50 font-semibold" : ""
+                  }`}
+                >
+                  {s.name}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 const CATEGORIES = [
   { name: "Food & Tiffin", icon: Utensils },
@@ -370,11 +460,22 @@ export default function Home() {
     )
   ).sort() as string[];
 
-  const { data: societiesInLocality } = useQuery({
-    queryKey: ["societies-locality", city, selectedLocality],
-    queryFn: () => api.societies.list(city || undefined, selectedLocality === "all" ? undefined : selectedLocality),
-    enabled: !!city
-  });
+  const societies = (() => {
+    if (!allBusinessesInCity) return [];
+    const filtered = allBusinessesInCity.filter(row => {
+      if (selectedLocality !== "all") {
+        return row.society?.locality === selectedLocality;
+      }
+      return true;
+    });
+    const map = new Map<number, { id: number; name: string }>();
+    filtered.forEach(row => {
+      if (row.society) {
+        map.set(row.society.id, { id: row.society.id, name: row.society.name });
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  })();
 
   const { data: businesses, isLoading: bizLoading } = useQuery({
     queryKey: ["businesses", selectedSociety, selectedLocality, selectedCategory, city],
@@ -603,17 +704,11 @@ export default function Home() {
                 }}
                 localities={localities}
               />
-              <Select value={selectedSociety} onValueChange={setSelectedSociety}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="All Societies" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Societies</SelectItem>
-                  {societiesInLocality?.map(s => (
-                    <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSocietySelect
+                value={selectedSociety}
+                onValueChange={setSelectedSociety}
+                societies={societies}
+              />
             </div>
           </div>
 
