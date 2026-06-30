@@ -354,7 +354,7 @@ export default function Home() {
       />
 
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-background pt-20 pb-28 border-b border-border/30">
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-background pt-12 md:pt-20 pb-4 md:pb-28 border-b border-border/30">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent pointer-events-none" />
         <div className="container mx-auto px-4 md:px-6 text-center relative">
           <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
@@ -365,7 +365,7 @@ export default function Home() {
               Discover trusted local businesses<br />
               <span className="text-primary">in your neighbourhood.</span>
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-4 md:mb-10">
               Find home chefs, tutors, bakers, tailors and more around you.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -385,13 +385,13 @@ export default function Home() {
                 List Your Business
               </Button>
             </div>
-            <p className="mt-5 text-sm text-muted-foreground">No sign-up required to explore businesses.</p>
+            <p className="mt-4 md:mt-5 text-sm text-muted-foreground">No sign-up required to explore businesses.</p>
           </motion.div>
         </div>
       </section>
 
       {/* ── Categories ── */}
-      <section className="py-12 border-b border-border/30 bg-muted/20">
+      <section className="py-2 md:py-12 border-b border-border/30 bg-muted/20">
         <div className="container mx-auto px-4 md:px-6">
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
             <button
@@ -420,10 +420,10 @@ export default function Home() {
       </section>
 
       {/* ── Main Browse ── */}
-      <section id="explore" className="py-14">
+      <section id="explore" className="py-4 md:py-14">
         <div className="container mx-auto px-4 md:px-6">
           {/* Filters row */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-8">
+          <div className="flex flex-col sm:flex-row gap-3 mb-6 md:mb-8">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
