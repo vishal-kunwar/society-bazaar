@@ -22,6 +22,7 @@ import { ImageUpload } from "@/components/image-upload";
 import { Navbar } from "@/components/navbar";
 
 import { CATEGORIES, PRICE_RANGES, CATEGORY_IMAGES } from "@/lib/constants";
+import { SUPPORTED_CITIES } from "@/lib/cities";
 
 
 interface FormData {
@@ -458,7 +459,7 @@ export default function Sell() {
                       <Select value={formData.city} onValueChange={v => set("city", v)}>
                         <SelectTrigger><SelectValue placeholder="Select your city" /></SelectTrigger>
                         <SelectContent>
-                          {["Delhi", "Gurgaon", "Noida", "Pune", "Mumbai", "Bangalore", "Hyderabad"].map(c => (
+                          {SUPPORTED_CITIES.map(c => (
                             <SelectItem key={c} value={c}>{c}</SelectItem>
                           ))}
                         </SelectContent>

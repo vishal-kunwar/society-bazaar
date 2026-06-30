@@ -16,6 +16,7 @@ import { useUser, UserButton } from "@clerk/react";
 
 
 import { CATEGORY_IMAGES } from "@/lib/constants";
+import { SUPPORTED_CITIES } from "@/lib/cities";
 
 
 const CATEGORIES = [
@@ -261,13 +262,9 @@ export default function Home() {
                 <SelectValue placeholder="City" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Delhi">Delhi</SelectItem>
-                <SelectItem value="Gurgaon">Gurgaon</SelectItem>
-                <SelectItem value="Noida">Noida</SelectItem>
-                <SelectItem value="Pune">Pune</SelectItem>
-                <SelectItem value="Mumbai">Mumbai</SelectItem>
-                <SelectItem value="Bangalore">Bangalore</SelectItem>
-                <SelectItem value="Hyderabad">Hyderabad</SelectItem>
+                {SUPPORTED_CITIES.map(c => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           )
@@ -680,7 +677,7 @@ export default function Home() {
             <h2 className="text-2xl font-bold text-center mb-2">Welcome to GoHustly</h2>
             <p className="text-center text-muted-foreground mb-6">Select your city to discover local home businesses around you.</p>
             <div className="grid grid-cols-2 gap-3">
-              {["Delhi", "Gurgaon", "Noida", "Pune", "Mumbai", "Bangalore", "Hyderabad"].map(c => (
+              {SUPPORTED_CITIES.map(c => (
                 <Button
                   key={c}
                   variant="outline"
