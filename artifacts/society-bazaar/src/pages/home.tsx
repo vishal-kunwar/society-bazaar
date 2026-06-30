@@ -643,7 +643,7 @@ export default function Home() {
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                 <MapPin className="text-primary-foreground w-5 h-5" />
               </div>
-              <span className="font-extrabold text-xl">Hust<span className="text-primary">ly</span></span>
+              <span className="font-extrabold text-xl">GoHust<span className="text-primary">ly</span></span>
             </div>
             <p className="text-sm text-muted-foreground text-center">
               Discover and support talented home chefs, bakers, and local services in your community.
