@@ -291,7 +291,7 @@ export default function Sell() {
               </div>
               <h2 className="text-2xl font-bold mb-3">🎉 Congratulations!</h2>
               <p className="text-muted-foreground mb-6 leading-relaxed">
-                Your <strong>Hustly business profile</strong> has been created.<br />
+                Your <strong>GoHustly business profile</strong> has been created.<br />
                 Our team will review your listing within 24 hours.<br />
                 Once approved, your business will be visible to buyers.
               </p>

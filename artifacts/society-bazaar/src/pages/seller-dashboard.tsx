@@ -301,7 +301,7 @@ function UpgradeModal({ isOpen, onClose, businessId }: { isOpen: boolean; onClos
 
           <div className="bg-muted p-4 rounded-lg flex flex-col items-center justify-center space-y-2">
             <div className="w-48 h-48 bg-white flex items-center justify-center border-4 border-primary overflow-hidden">
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi%3A%2F%2Fpay%3Fpa%3Dkotakupivk%40axl%26pn%3DHustly%26am%3D199%26cu%3DINR" alt="UPI QR Code" className="w-full h-full p-2 object-contain" />
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi%3A%2F%2Fpay%3Fpa%3Dkotakupivk%40axl%26pn%3DGoHustly%26am%3D199%26cu%3DINR" alt="UPI QR Code" className="w-full h-full p-2 object-contain" />
             </div>
             <p className="text-sm font-medium">Scan to pay ₹199</p>
             <p className="text-xs text-muted-foreground">UPI ID: kotakupivk@axl</p>
@@ -760,7 +760,7 @@ export default function SellerDashboard() {
                   🎉 Congratulations!
                 </h4>
                 <p className="text-xs text-green-700 mt-1 leading-relaxed">
-                  You received your first customer enquiry from Hustly!
+                  You received your first customer enquiry from GoHustly!
                   <br />
                   Your business is now reaching nearby customers.
                   <br />
@@ -787,7 +787,7 @@ export default function SellerDashboard() {
                   🎉 Congratulations! Your business has been approved.
                 </h4>
                 <p className="text-xs text-green-700 mt-1 leading-relaxed">
-                  Your business is now live on Hustly and reaching nearby customers.
+                  Your business is now live on GoHustly and reaching nearby customers.
                   Keep your profile updated to receive more enquiries.
                 </p>
               </div>
@@ -808,7 +808,7 @@ export default function SellerDashboard() {
             <div className="mb-6 flex items-center gap-3 p-4 rounded-xl bg-primary/10 border border-primary/20">
               <Bell className="w-5 h-5 text-primary shrink-0" />
               <p className="text-sm font-medium">
-                You received <strong>{analytics.leadsThisMonth} leads</strong> from Hustly this month. Keep the momentum going!
+                You received <strong>{analytics.leadsThisMonth} leads</strong> from GoHustly this month. Keep the momentum going!
               </p>
             </div>
           </motion.div>

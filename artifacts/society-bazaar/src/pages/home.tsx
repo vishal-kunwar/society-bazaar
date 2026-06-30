@@ -228,7 +228,7 @@ export default function Home() {
 
   const handleWhatsApp = useCallback((businessId: number, whatsapp: string) => {
     api.leads.track(businessId).catch(() => { });
-    const msg = encodeURIComponent("Hi, I found your business on Hustly and would like to know more.");
+    const msg = encodeURIComponent("Hi, I found your business on GoHustly and would like to know more.");
     window.open(`https://wa.me/${whatsapp.replace(/\D/g, "")}?text=${msg}`, "_blank");
   }, []);
 
@@ -660,7 +660,7 @@ export default function Home() {
             <button onClick={() => setLocation("/refund")} className="hover:text-foreground transition-colors">Refund & Cancellation</button>
           </div>
           <p className="text-center text-xs text-muted-foreground mt-8">
-            © {new Date().getFullYear()} Hustly. Your neighbourhood marketplace.
+            © {new Date().getFullYear()} GoHustly. Your neighbourhood marketplace.
             <button onClick={() => setLocation("/admin")} className="opacity-0 hover:opacity-30 ml-2 cursor-default hover:cursor-pointer transition-opacity text-[10px]">admin</button>
           </p>
         </div>
@@ -677,7 +677,7 @@ export default function Home() {
             <div className="flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full mb-4 mx-auto">
               <MapPin className="w-6 h-6 text-primary" />
             </div>
-            <h2 className="text-2xl font-bold text-center mb-2">Welcome to Hustly</h2>
+            <h2 className="text-2xl font-bold text-center mb-2">Welcome to GoHustly</h2>
             <p className="text-center text-muted-foreground mb-6">Select your city to discover local home businesses around you.</p>
             <div className="grid grid-cols-2 gap-3">
               {["Delhi", "Gurgaon", "Noida", "Pune", "Mumbai", "Bangalore", "Hyderabad"].map(c => (

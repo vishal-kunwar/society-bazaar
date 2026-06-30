@@ -22,7 +22,7 @@ export function Navbar({ leftContent, rightContent, mobileContent }: NavbarProps
               <MapPin className="text-primary-foreground w-5 h-5" />
             </div>
             <span className="font-extrabold text-xl tracking-tight">
-              Hust<span className="text-primary">ly</span>
+              GoHust<span className="text-primary">ly</span>
             </span>
           </div>
           {leftContent}

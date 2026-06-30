@@ -12,8 +12,8 @@ import { Navbar } from "@/components/navbar";
 
 const FAQ_ITEMS = [
   {
-    q: "How does Hustly work?",
-    a: "Hustly is a hyper-local marketplace for your society. You list your home business, menu, or services, and residents in your society can discover you and message you directly on WhatsApp to place orders."
+    q: "How does GoHustly work?",
+    a: "GoHustly is a hyper-local marketplace for your society. You list your home business, menu, or services, and residents in your society can discover you and message you directly on WhatsApp to place orders."
   },
   {
     q: "Is it really free to list?",
@@ -24,7 +24,7 @@ const FAQ_ITEMS = [
     a: "Since you are selling to your own neighbours in the same society, buyers can easily pick up their orders from your flat, or you can drop them off. No need for complex shipping or delivery partners!"
   },
   {
-    q: "What can I list on Hustly?",
+    q: "What can I list on GoHustly?",
     a: "You can list any home business, including food & tiffins, bakery & sweets, home tuition, fitness/yoga classes, tailoring, beauty services, home repairs, or custom crafts."
   }
 ];
@@ -102,10 +102,10 @@ export default function SellerLanding() {
         </div>
       </section>
 
-      {/* Benefits / Why Hustly */}
+      {/* Benefits / Why GoHustly */}
       <section className="py-20 bg-muted/20">
         <div className="container mx-auto px-4 md:px-6">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-14">Why sellers love Hustly</h2>
+          <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-14">Why sellers love GoHustly</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { icon: Zap, title: "Live in Minutes", body: "List your business and start getting WhatsApp leads the same day. No setup fees, no tech skills needed." },
@@ -176,7 +176,7 @@ export default function SellerLanding() {
           <h2 className="text-3xl font-extrabold text-center mb-12">What sellers say</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { name: "Priya Sharma", cat: "Tiffin Service", body: "Got my first 5 customers within a week of listing. Hustly is a game-changer for home chefs!", city: "Mumbai" },
+              { name: "Priya Sharma", cat: "Tiffin Service", body: "Got my first 5 customers within a week of listing. GoHustly is a game-changer for home chefs!", city: "Mumbai" },
               { name: "Meena Patel", cat: "Bakery & Sweets", body: "I was scared nobody would find me. Now I get WhatsApp orders every single day from my neighbours.", city: "Pune" },
               { name: "Rohan Gupta", cat: "Tuition Classes", body: "The free trial is genuinely free — no hidden catches. My classes are full and I haven't paid a rupee yet.", city: "Bangalore" },
             ].map((t, i) => (
@@ -263,7 +263,7 @@ export default function SellerLanding() {
               <button onClick={() => setLocation("/refund")} className="hover:text-foreground transition-colors">Refund & Cancellation</button>
           </div>
           <p className="text-sm text-muted-foreground mt-8">
-            © {new Date().getFullYear()} Hustly. Your neighbourhood marketplace.
+            © {new Date().getFullYear()} GoHustly. Your neighbourhood marketplace.
             <button onClick={() => setLocation("/admin")} className="opacity-0 hover:opacity-30 ml-2 cursor-default hover:cursor-pointer transition-opacity text-[10px]">admin</button>
           </p>
         </div>

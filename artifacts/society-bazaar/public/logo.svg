@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 44" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 44" fill="none">
   <rect width="32" height="32" x="6" y="6" rx="8" fill="#2e7d5e"/>
   <path d="M22 10c-5 0-9 4-9 9 0 6 9 15 9 15s9-9 9-15c0-5-4-9-9-9zm0 12a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" fill="white"/>
-  <text x="46" y="29" font-family="Plus Jakarta Sans, sans-serif" font-size="22" font-weight="800" fill="#1a3a2f">Hust<tspan fill="#2e7d5e">ly</tspan></text>
+  <text x="46" y="29" font-family="Plus Jakarta Sans, sans-serif" font-size="22" font-weight="800" fill="#1a3a2f">GoHust<tspan fill="#2e7d5e">ly</tspan></text>
 </svg>

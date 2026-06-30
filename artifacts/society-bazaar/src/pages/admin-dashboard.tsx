@@ -832,7 +832,7 @@ export default function AdminDashboard() {
       <main className="container mx-auto px-4 md:px-6 py-10 max-w-6xl">
         <div className="mb-10">
           <h1 className="text-3xl font-bold mb-1">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage hustles, sellers, and the Hustly community</p>
+          <p className="text-muted-foreground">Manage hustles, sellers, and the GoHustly community</p>
         </div>
 
         {/* Stat Cards */}

@@ -32,7 +32,7 @@ export default function Favourites() {
 
   const handleWhatsApp = (businessId: number, whatsapp: string) => {
     api.leads.track(businessId, "whatsapp").catch(() => {});
-    const msg = encodeURIComponent("Hi, I found your business on Hustly and would like to know more.");
+    const msg = encodeURIComponent("Hi, I found your business on GoHustly and would like to know more.");
     window.open(`https://wa.me/${whatsapp.replace(/\D/g, "")}?text=${msg}`, "_blank");
   };
 

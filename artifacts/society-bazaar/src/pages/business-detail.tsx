@@ -114,10 +114,10 @@ export default function BusinessDetail() {
     if (!data) return;
     const item = product ?? selectedProduct;
     api.leads.track(data.business.id, source).catch(() => {});
-    let text = "Hi, I found your business on Hustly and would like to know more.";
+    let text = "Hi, I found your business on GoHustly and would like to know more.";
     if (item) {
       const pricePart = item.price ? ` (${item.price})` : "";
-      text = `Hi, I found your business on Hustly. I'm interested in: ${item.name}${pricePart}.`;
+      text = `Hi, I found your business on GoHustly. I'm interested in: ${item.name}${pricePart}.`;
     }
     const msg = encodeURIComponent(text);
     window.open(`https://wa.me/${data.business.whatsapp.replace(/\D/g, "")}?text=${msg}`, "_blank");
@@ -251,7 +251,7 @@ export default function BusinessDetail() {
                       onClick={() => {
                         api.deals.trackClick(data.activeDeal!.id).catch(() => {});
                         api.leads.track(biz.id, "whatsapp_deal").catch(() => {});
-                        const msg = encodeURIComponent(`Hi, I saw your Daily Deal "${data.activeDeal!.title}" on Hustly and would like to claim it!`);
+                        const msg = encodeURIComponent(`Hi, I saw your Daily Deal "${data.activeDeal!.title}" on GoHustly and would like to claim it!`);
                         window.open(`https://wa.me/${biz.whatsapp.replace(/\D/g, "")}?text=${msg}`, "_blank");
                       }}
                       className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl h-10 px-6 text-sm font-semibold bg-[#25D366] text-white hover:bg-[#20bd5a] transition-colors"
