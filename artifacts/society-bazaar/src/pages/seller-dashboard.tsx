@@ -36,10 +36,10 @@ const STATUS_ICONS: Record<string, React.ElementType> = {
 
 import type { BusinessRow } from "@/lib/api";
 
-function SubscriptionTracker({ biz, onUpgrade }: { biz: BusinessRow; onUpgrade: (id: number) => void }) {
+function SubscriptionTracker({ biz, approvedCount, onUpgrade }: { biz: BusinessRow; approvedCount: number; onUpgrade: (id: number) => void }) {
   const isPro = biz.business.subscriptionPlan === "pro";
   const trialOver = biz.trialExpired;
-  const leadsUsed = biz.leadCount;
+  const leadsUsed = biz.sellerLeads ?? biz.leadCount;
   const daysRemaining = biz.daysRemaining ?? 0;
   const daysUsed = Math.max(0, 90 - daysRemaining);
 
@@ -63,7 +63,7 @@ function SubscriptionTracker({ biz, onUpgrade }: { biz: BusinessRow; onUpgrade: 
                 </div>
                 <div>
                   <h3 className="font-bold text-lg text-foreground flex items-center gap-2">
-                    PRO PLAN ACTIVE <span className="text-sm font-normal text-muted-foreground">({biz.business.businessName})</span>
+                    PRO PLAN ACTIVE <span className="text-sm font-normal text-muted-foreground">(Active Businesses: {approvedCount})</span>
                   </h3>
                   <p className="text-xs font-semibold text-green-700 uppercase tracking-wider">Unlimited Leads · Unlimited Daily Deals</p>
                 </div>
@@ -171,7 +171,7 @@ function SubscriptionTracker({ biz, onUpgrade }: { biz: BusinessRow; onUpgrade: 
                   25 Free Leads + 90-Day Trial
                 </p>
                 <p className="text-xs font-semibold text-muted-foreground mt-0.5">
-                  Business: {biz.business.businessName}
+                  Active Businesses: {approvedCount}
                 </p>
               </div>
 
@@ -1004,13 +1004,13 @@ export default function SellerDashboard() {
 
         {/* Subscription tracker */}
         <div className="mb-8">
-          {approvedBusinesses.map((biz) => (
+          {approvedBusinesses.length > 0 && (
             <SubscriptionTracker
-              key={`sub-${biz.business.id}`}
-              biz={biz}
+              biz={approvedBusinesses[0]}
+              approvedCount={approvedBusinesses.length}
               onUpgrade={setUpgradeBizId}
             />
-          ))}
+          )}
         </div>
 
         {/* Engagement tools */}

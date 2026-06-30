@@ -6,6 +6,7 @@ import { requireAuth } from "../middlewares/requireAuth";
 import type { AuthedRequest } from "../middlewares/requireAuth";
 import type { Request, Response } from "express";
 import { requireAdmin } from "../middlewares/requireAdmin";
+import { getSellerSubscriptionStatus } from "../lib/subscription";
 
 const router = Router();
 
@@ -88,19 +89,10 @@ router.post("/deals", requireAuth, async (req: Request, res: Response) => {
     return;
   }
 
-  // 2. Check plan and trial expiry
-  const isPro = biz.subscriptionPlan === "pro" && biz.proValidUntil && new Date(biz.proValidUntil) > now;
-  const daysSinceCreated = (Date.now() - new Date(biz.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+  // 2. Check plan and trial expiry at seller account level
+  const status = await getSellerSubscriptionStatus(biz.clerkUserId);
 
-  const [leadCountRow] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(leadsTable)
-    .where(eq(leadsTable.businessId, biz.id));
-  const leadCount = Number(leadCountRow?.count || 0);
-
-  const trialExpired = !isPro && (leadCount >= 25 || daysSinceCreated >= 90);
-
-  if (trialExpired) {
+  if (status.trialExpired) {
     res.status(403).json({ error: "Your free trial has expired. Please upgrade to Pro to create a new Daily Deal." });
     return;
   }

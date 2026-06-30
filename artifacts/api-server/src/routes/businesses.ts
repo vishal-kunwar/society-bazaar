@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { businessesTable, societiesTable, reviewsTable, leadsTable, dailyDealsTable } from "@workspace/db";
 import { eq, and, desc, sql, gt, lte } from "drizzle-orm";
+import { getSellerSubscriptionStatus, type SellerSubscriptionStatus } from "../lib/subscription";
 import { requireAuth } from "../middlewares/requireAuth";
 import type { AuthedRequest } from "../middlewares/requireAuth";
 import type { Request, Response } from "express";
@@ -39,12 +40,25 @@ router.get("/businesses", async (req: Request, res: Response) => {
     .limit(parsedLimit)
     .offset(parsedOffset);
 
+  const uniqueClerkUserIds = Array.from(new Set(rows.map(row => row.business.clerkUserId)));
+  const statusMap = new Map<string, SellerSubscriptionStatus>();
+  await Promise.all(
+    uniqueClerkUserIds.map(async (clerkUserId) => {
+      const status = await getSellerSubscriptionStatus(clerkUserId);
+      statusMap.set(clerkUserId, status);
+    })
+  );
+
   const enrichedRows = rows.map(row => {
-    const isPro = row.business.subscriptionPlan === "pro" && row.business.proValidUntil && new Date(row.business.proValidUntil) > new Date();
-    const daysSinceCreated = (new Date().getTime() - new Date(row.business.createdAt).getTime()) / (1000 * 60 * 60 * 24);
-    const trialExpired = !isPro && (row.leadCount >= 25 || daysSinceCreated >= 90);
+    const status = statusMap.get(row.business.clerkUserId)!;
+    const isPro = status.isPro;
+    const trialExpired = status.trialExpired;
     
     const b = { ...row.business };
+    if (isPro) {
+      b.subscriptionPlan = "pro";
+      b.proValidUntil = status.proValidUntil;
+    }
     if (trialExpired) {
       b.phone = "";
       b.whatsapp = "";
@@ -99,11 +113,15 @@ router.get("/businesses/:id", async (req: Request, res: Response) => {
   const activeDeal = activeDeals[0] || null;
 
   const row = rows[0];
-  const isPro = row.business.subscriptionPlan === "pro" && row.business.proValidUntil && new Date(row.business.proValidUntil) > new Date();
-  const daysSinceCreated = (new Date().getTime() - new Date(row.business.createdAt).getTime()) / (1000 * 60 * 60 * 24);
-  const trialExpired = !isPro && (row.leadCount >= 25 || daysSinceCreated >= 90);
+  const status = await getSellerSubscriptionStatus(row.business.clerkUserId);
+  const isPro = status.isPro;
+  const trialExpired = status.trialExpired;
   
   const b = { ...row.business };
+  if (isPro) {
+    b.subscriptionPlan = "pro";
+    b.proValidUntil = status.proValidUntil;
+  }
   if (trialExpired) {
     b.phone = "";
     b.whatsapp = "";
@@ -247,12 +265,9 @@ router.get("/my-businesses", requireAuth, async (req: Request, res: Response) =>
     .groupBy(businessesTable.id, societiesTable.id)
     .orderBy(desc(businessesTable.createdAt));
 
+  const status = await getSellerSubscriptionStatus(userId);
+
   const enrichedRows = await Promise.all(rows.map(async (row) => {
-    const isPro = row.business.subscriptionPlan === "pro" && row.business.proValidUntil && new Date(row.business.proValidUntil) > new Date();
-    const daysSinceCreated = (new Date().getTime() - new Date(row.business.createdAt).getTime()) / (1000 * 60 * 60 * 24);
-    const trialExpired = !isPro && (row.leadCount >= 25 || daysSinceCreated >= 90);
-    const daysRemaining = Math.max(0, 90 - Math.floor(daysSinceCreated));
-    
     // Fetch any non-expired deal for the seller (includes scheduled + active)
     const sellerNow = new Date();
     const activeDeals = await db
@@ -268,7 +283,20 @@ router.get("/my-businesses", requireAuth, async (req: Request, res: Response) =>
       .limit(1);
     const activeDeal = activeDeals[0] || null;
 
-    return { ...row, trialExpired, daysRemaining, activeDeal };
+    const b = { ...row.business };
+    if (status.isPro) {
+      b.subscriptionPlan = "pro";
+      b.proValidUntil = status.proValidUntil;
+    }
+
+    return { 
+      ...row, 
+      business: b, 
+      trialExpired: status.trialExpired, 
+      daysRemaining: status.daysRemaining, 
+      sellerLeads: status.totalLeads, 
+      activeDeal 
+    };
   }));
 
   res.json(enrichedRows);
