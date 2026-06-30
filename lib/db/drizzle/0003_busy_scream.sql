@@ -1,0 +1,1 @@
+ALTER TYPE "public"."business_category" ADD VALUE 'Design & Creative Services' BEFORE 'Others';

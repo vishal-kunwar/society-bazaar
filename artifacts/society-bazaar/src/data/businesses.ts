@@ -110,5 +110,5 @@ export const categoriesList = [
   "Beauty & Wellness", "Salon at Home", "Fitness, Yoga & Zumba", "Tuition & Classes",
   "Arts, Music & Hobby Classes", "Tailoring & Boutique", "Home Services", "Repairs & Maintenance",
   "Pet Care", "Photography & Events", "Gifts & Handmade", "Tech & Digital Services",
-  "Travel & Transport", "Others"
+  "Travel & Transport", "Design & Creative Services", "Others"
 ];

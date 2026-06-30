@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
-import { Menu, X, Search, MapPin, Utensils, Cake, BookOpen, Dumbbell, Scissors, Sparkles, Wrench, MoreHorizontal, Star, MessageCircle, TrendingUp, Heart, Flame, Clock, Bell, ShoppingBag, Shirt, Palette, Hammer, Dog, Camera, Gift, Monitor, Car, Briefcase } from "lucide-react";
+import { Menu, X, Search, MapPin, Utensils, Cake, BookOpen, Dumbbell, Scissors, Sparkles, Wrench, MoreHorizontal, Star, MessageCircle, TrendingUp, Heart, Flame, Clock, Bell, ShoppingBag, Shirt, Palette, Hammer, Dog, Camera, Gift, Monitor, Car, Briefcase, Paintbrush } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -294,6 +294,7 @@ const CATEGORIES = [
   { name: "Gifts & Handmade", icon: Gift },
   { name: "Tech & Digital Services", icon: Monitor },
   { name: "Travel & Transport", icon: Car },
+  { name: "Design & Creative Services", icon: Paintbrush },
   { name: "Others", icon: Briefcase }
 ];
 

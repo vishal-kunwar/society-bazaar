@@ -16,6 +16,7 @@ export const CATEGORY_IMAGES: Record<string, string> = {
   "Gifts & Handmade": "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600&q=80",
   "Tech & Digital Services": "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&q=80",
   "Travel & Transport": "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=600&q=80",
+  "Design & Creative Services": "https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=600&q=80",
   "Others": "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&q=80",
 };
 

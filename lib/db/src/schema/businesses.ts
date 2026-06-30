@@ -25,6 +25,7 @@ export const businessCategoryEnum = pgEnum("business_category", [
   "Gifts & Handmade",
   "Tech & Digital Services",
   "Travel & Transport",
+  "Design & Creative Services",
   "Others",
 ]);
 
