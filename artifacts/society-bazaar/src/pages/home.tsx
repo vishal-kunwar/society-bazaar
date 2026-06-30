@@ -360,11 +360,10 @@ export default function Home() {
         <div className="container mx-auto px-4 md:px-6 text-center relative">
           <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <div className="inline-flex items-center gap-2 bg-primary/10 text-primary text-xs font-semibold px-4 py-1.5 rounded-full mb-6 border border-primary/20">
-              <Flame className="w-3.5 h-3.5" />500+ home hustles listed · Connect directly on WhatsApp
+              <Flame className="w-3.5 h-3.5" />Your neighbourhood marketplace · Connect directly on WhatsApp
             </div>
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-foreground leading-tight mb-5">
-              Discover trusted local businesses<br />
-              <span className="text-primary">in your neighbourhood.</span>
+              Discover trusted local businesses around you.
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-4 md:mb-10">
               Find home chefs, tutors, bakers, tailors and more around you.
