@@ -17,6 +17,7 @@ import { api } from "@/lib/api";
 import type { Business, Society } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { Navbar } from "@/components/navbar";
+import { SUPPORTED_CITIES } from "@/lib/cities";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -799,6 +800,26 @@ export default function AdminDashboard() {
 
   const [endDealTargetId, setEndDealTargetId] = useState<number | null>(null);
 
+  const [selectedDistCity, setSelectedDistCity] = useState("Pune");
+  const [selectedDistLocality, setSelectedDistLocality] = useState("");
+
+  useEffect(() => {
+    if (!stats?.sellerDistribution) return;
+    const localities = Array.from(
+      new Set(
+        stats.sellerDistribution
+          .filter((d: any) => d.city.toLowerCase() === selectedDistCity.toLowerCase())
+          .map((d: any) => d.locality)
+          .filter(Boolean)
+      )
+    ) as string[];
+    if (localities.length > 0) {
+      setSelectedDistLocality(localities[0]);
+    } else {
+      setSelectedDistLocality("");
+    }
+  }, [selectedDistCity, stats?.sellerDistribution]);
+
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["admin-stats"],
     queryFn: () => api.admin.stats(),
@@ -880,11 +901,40 @@ export default function AdminDashboard() {
   };
 
   const statCards = [
-    { label: "Total Hustles", value: stats?.totalBusinesses ?? "—", icon: Building2 },
+    { label: "Total Businesses", value: stats?.totalBusinesses ?? "—", icon: Building2 },
     { label: "Pending Review", value: stats?.pendingBusinesses ?? "—", icon: Clock },
     { label: "Active Sellers", value: stats?.approvedBusinesses ?? "—", icon: Users },
     { label: "Total Leads", value: stats?.totalLeads ?? "—", icon: TrendingUp },
   ];
+
+  const cityStats = SUPPORTED_CITIES.map(c => {
+    const count = stats?.sellerDistribution?.filter((d: any) => d.city.toLowerCase() === c.toLowerCase()).length ?? 0;
+    return { name: c, count };
+  });
+
+  const localityMap = new Map<string, number>();
+  stats?.sellerDistribution?.forEach((d: any) => {
+    if (d.city && d.city.toLowerCase() === selectedDistCity.toLowerCase() && d.locality) {
+      localityMap.set(d.locality, (localityMap.get(d.locality) ?? 0) + 1);
+    }
+  });
+  const localityStats = Array.from(localityMap.entries())
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count);
+
+  const societyMap = new Map<string, number>();
+  stats?.sellerDistribution?.forEach((d: any) => {
+    if (
+      d.city && d.city.toLowerCase() === selectedDistCity.toLowerCase() &&
+      d.locality && d.locality.toLowerCase() === selectedDistLocality?.toLowerCase() &&
+      d.societyName
+    ) {
+      societyMap.set(d.societyName, (societyMap.get(d.societyName) ?? 0) + 1);
+    }
+  });
+  const societyStats = Array.from(societyMap.entries())
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count);
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
@@ -940,11 +990,14 @@ export default function AdminDashboard() {
           <Card className="mb-10 border-border/50">
             <CardHeader><CardTitle className="text-base font-semibold">Top Categories</CardTitle></CardHeader>
             <CardContent>
-              <div className="flex flex-wrap gap-3">
-                {stats.topCategories.map((cat, i) => (
-                  <div key={i} className="flex items-center gap-2 bg-muted px-3 py-2 rounded-lg">
-                    <span className="text-sm font-semibold">{cat.category}</span>
-                    <Badge variant="secondary" className="text-xs">{cat.count}</Badge>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {stats.topCategories.map((cat: any, i: number) => (
+                  <div key={i} className="bg-muted/50 border border-border/40 p-3 rounded-xl flex flex-col justify-between">
+                    <span className="text-xs font-bold text-foreground truncate mb-2 block">{cat.category}</span>
+                    <div className="space-y-0.5 text-xs text-muted-foreground">
+                      <div>Businesses: <span className="font-semibold text-foreground">{cat.count}</span></div>
+                      <div>Leads: <span className="font-semibold text-primary">{cat.leadCount ?? 0}</span></div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -952,7 +1005,88 @@ export default function AdminDashboard() {
           </Card>
         )}
 
-        <h2 className="text-xl font-bold mb-5">Hustle Approvals</h2>
+        {stats?.sellerDistribution && (
+          <Card className="mb-10 border-border/50">
+            <CardHeader>
+              <CardTitle className="text-base font-semibold">Seller Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* City column */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-bold text-foreground border-b border-border/40 pb-2">City</h4>
+                  <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-1">
+                    {cityStats.map(item => (
+                      <button
+                        key={item.name}
+                        onClick={() => setSelectedDistCity(item.name)}
+                        className={`w-full flex items-center justify-between text-xs px-3 py-2 rounded-lg border transition-all text-left ${
+                          selectedDistCity.toLowerCase() === item.name.toLowerCase()
+                            ? "bg-primary/10 border-primary text-foreground font-semibold"
+                            : "bg-muted/30 border-border/40 hover:bg-muted/50 text-muted-foreground"
+                        }`}
+                      >
+                        <span>{item.name}</span>
+                        <span className="font-semibold">{item.count}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Locality column */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-bold text-foreground border-b border-border/40 pb-2">
+                    Localities <span className="text-xs font-normal text-muted-foreground">(in {selectedDistCity})</span>
+                  </h4>
+                  <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-1">
+                    {localityStats.length === 0 ? (
+                      <p className="text-xs text-muted-foreground py-4 text-center">No localities found</p>
+                    ) : (
+                      localityStats.map(item => (
+                        <button
+                          key={item.name}
+                          onClick={() => setSelectedDistLocality(item.name)}
+                          className={`w-full flex items-center justify-between text-xs px-3 py-2 rounded-lg border transition-all text-left ${
+                            selectedDistLocality?.toLowerCase() === item.name.toLowerCase()
+                              ? "bg-primary/10 border-primary text-foreground font-semibold"
+                              : "bg-muted/30 border-border/40 hover:bg-muted/50 text-muted-foreground"
+                          }`}
+                        >
+                          <span>{item.name}</span>
+                          <span className="font-semibold">{item.count}</span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Society column */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-bold text-foreground border-b border-border/40 pb-2">
+                    Societies <span className="text-xs font-normal text-muted-foreground">({selectedDistLocality ? `in ${selectedDistLocality}` : "no locality selected"})</span>
+                  </h4>
+                  <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-1">
+                    {!selectedDistLocality || societyStats.length === 0 ? (
+                      <p className="text-xs text-muted-foreground py-4 text-center">No societies found</p>
+                    ) : (
+                      societyStats.map(item => (
+                        <div
+                          key={item.name}
+                          className="w-full flex items-center justify-between text-xs px-3 py-2 rounded-lg border bg-muted/30 border-border/40 text-muted-foreground text-left"
+                        >
+                          <span className="truncate pr-2">{item.name}</span>
+                          <span className="font-semibold shrink-0">{item.count}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <h2 className="text-xl font-bold mb-5">Business Approvals</h2>
 
         <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setReviewIndex(null); }}>
           <TabsList className="mb-6">
@@ -1061,7 +1195,16 @@ export default function AdminDashboard() {
             <TabsContent key={tab} value={tab}>
               {bizLoading && <div className="grid gap-4">{[1, 2, 3].map(i => <div key={i} className="h-28 rounded-xl bg-muted animate-pulse" />)}</div>}
               {!bizLoading && !bizRows.length && (
-                <div className="text-center py-16 text-muted-foreground">No {tab} businesses at the moment.</div>
+                <div className="text-center py-16 text-muted-foreground">
+                  {tab === "pending" ? (
+                    <div className="space-y-1">
+                      <div className="text-lg font-bold text-foreground">✅ All caught up!</div>
+                      <div className="text-sm">There are no pending business approvals.</div>
+                    </div>
+                  ) : (
+                    `No ${tab} businesses at the moment.`
+                  )}
+                </div>
               )}
               {!bizLoading && bizRows.map((row, idx) => (
                 <ListingCard

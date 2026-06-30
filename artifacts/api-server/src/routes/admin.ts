@@ -76,12 +76,14 @@ router.get("/admin/stats", requireAdmin, async (_req: Request, res: Response) =>
   const topCategories = await db
     .select({
       category: businessesTable.category,
-      count: count(businessesTable.id),
+      count: count(sql`distinct ${businessesTable.id}`),
+      leadCount: count(leadsTable.id),
     })
     .from(businessesTable)
+    .leftJoin(leadsTable, eq(leadsTable.businessId, businessesTable.id))
     .where(eq(businessesTable.status, "approved"))
     .groupBy(businessesTable.category)
-    .orderBy(desc(count(businessesTable.id)))
+    .orderBy(desc(count(sql`distinct ${businessesTable.id}`)))
     .limit(5);
 
   const topBusinesses = await db
@@ -96,6 +98,17 @@ router.get("/admin/stats", requireAdmin, async (_req: Request, res: Response) =>
     .orderBy(desc(count(leadsTable.id)))
     .limit(5);
 
+  const sellerDistribution = await db
+    .select({
+      id: businessesTable.id,
+      city: societiesTable.city,
+      locality: societiesTable.locality,
+      societyName: societiesTable.name,
+    })
+    .from(businessesTable)
+    .innerJoin(societiesTable, eq(businessesTable.societyId, societiesTable.id))
+    .where(eq(businessesTable.status, "approved"));
+
   res.json({
     totalBusinesses: totals.totalBusinesses,
     pendingBusinesses: pendingCount.count,
@@ -103,6 +116,7 @@ router.get("/admin/stats", requireAdmin, async (_req: Request, res: Response) =>
     totalLeads: totalLeads.count,
     topCategories,
     topBusinesses,
+    sellerDistribution,
   });
 });
 
