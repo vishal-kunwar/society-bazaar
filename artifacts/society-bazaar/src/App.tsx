@@ -174,7 +174,11 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 }
 
 function ClerkProviderWithRoutes() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location]);
 
   return (
     <ClerkProvider
