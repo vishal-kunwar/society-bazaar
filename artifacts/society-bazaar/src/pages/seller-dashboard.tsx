@@ -901,7 +901,7 @@ export default function SellerDashboard() {
 
   const statCards = [
     { label: "Leads This Month", value: analyticsLoading ? "…" : analytics?.leadsThisMonth ?? 0, icon: MessageCircle, color: "text-primary", bg: "bg-primary/10" },
-    { label: "Total Leads", value: analyticsLoading ? "…" : `${analytics?.totalLeads ?? 0} (${analytics?.totalClicks ?? 0} clicks)`, icon: TrendingUp, color: "text-blue-600", bg: "bg-blue-100" },
+    { label: "Unique Leads", value: analyticsLoading ? "…" : `${analytics?.totalLeads ?? 0} (${analytics?.totalClicks ?? 0} clicks)`, icon: TrendingUp, color: "text-blue-600", bg: "bg-blue-100" },
     { label: "Repeat Customers", value: analyticsLoading ? "…" : analytics?.repeatLeads ?? 0, icon: RefreshCw, color: "text-orange-600", bg: "bg-orange-100" },
     { label: "Avg. Rating", value: analyticsLoading ? "…" : `${Number(analytics?.avgRating ?? 0).toFixed(1)} ⭐`, icon: Star, color: "text-yellow-600", bg: "bg-yellow-100" },
   ];
@@ -913,7 +913,7 @@ export default function SellerDashboard() {
         rightContent={
           <>
             <Button variant="outline" size="sm" onClick={() => setLocation("/sell")}>
-              <Plus className="w-4 h-4 mr-1" />New Listing
+              <Plus className="w-4 h-4 mr-1" />Add New Business
             </Button>
             <div className="flex items-center gap-2 border-l border-border/40 pl-2 ml-1">
               <Button variant="outline" size="sm" onClick={() => signOut({ redirectUrl: basePath || "/" })}>
@@ -928,7 +928,7 @@ export default function SellerDashboard() {
         mobileContent={
           <>
             <Button variant="outline" size="sm" className="justify-start w-full" onClick={() => setLocation("/sell")}>
-              <Plus className="w-4 h-4 mr-1" />New Listing
+              <Plus className="w-4 h-4 mr-1" />Add New Business
             </Button>
             <Button variant="outline" size="sm" className="justify-start w-full text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => signOut({ redirectUrl: basePath || "/" })}>
               <LogOut className="w-4 h-4 mr-1" />Sign Out
@@ -943,7 +943,7 @@ export default function SellerDashboard() {
           <h1 className="text-3xl font-bold mb-1">
             Your Dashboard, {user?.firstName ?? "Seller"} 👋
           </h1>
-          <p className="text-muted-foreground">Manage your hustles and track your growth</p>
+          <p className="text-muted-foreground">Manage your business and track your growth.</p>
         </div>
 
         {/* First Customer Enquiry Celebration Banner */}
@@ -1003,7 +1003,7 @@ export default function SellerDashboard() {
             <div className="mb-6 flex items-center gap-3 p-4 rounded-xl bg-primary/10 border border-primary/20">
               <Bell className="w-5 h-5 text-primary shrink-0" />
               <p className="text-sm font-medium">
-                You received <strong>{analytics.leadsThisMonth} leads</strong> from GoHustly this month. Keep the momentum going!
+                You've received <strong>{analytics.leadsThisMonth} customer enquiries</strong> from GoHustly this month. Keep it up!
               </p>
             </div>
           </motion.div>
