@@ -15,7 +15,7 @@ import AdminDashboard from "@/pages/admin-dashboard";
 import AdminLogin from "@/pages/admin-login";
 import Favourites from "@/pages/favourites";
 import SellerProducts from "@/pages/seller-products";
-import { TermsAndConditions, RefundPolicy, ContactPolicy, AboutPolicy } from "@/pages/policies";
+import { TermsAndConditions, RefundPolicy, ContactPolicy, AboutPolicy, PrivacyPolicy } from "@/pages/policies";
 import SellEdit from "@/pages/sell-edit";
 import SellerLanding from "@/pages/seller-landing";
 
@@ -221,6 +221,7 @@ function ClerkProviderWithRoutes() {
             <Route path="/admin" component={() => <AdminProtectedRoute component={AdminDashboard} />} />
             <Route path="/favourites" component={() => <ProtectedRoute component={Favourites} />} />
             <Route path="/terms" component={TermsAndConditions} />
+            <Route path="/privacy" component={PrivacyPolicy} />
             <Route path="/refund" component={RefundPolicy} />
             <Route path="/contact" component={ContactPolicy} />
             <Route path="/about" component={AboutPolicy} />

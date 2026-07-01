@@ -922,6 +922,7 @@ export default function Home() {
             <button onClick={() => setLocation("/about")} className="hover:text-foreground transition-colors">About Us</button>
             <button onClick={() => setLocation("/contact")} className="hover:text-foreground transition-colors">Contact Us</button>
             <button onClick={() => setLocation("/terms")} className="hover:text-foreground transition-colors">Terms & Conditions</button>
+            <button onClick={() => setLocation("/privacy")} className="hover:text-foreground transition-colors">Privacy Policy</button>
             <button onClick={() => setLocation("/refund")} className="hover:text-foreground transition-colors">Refund & Cancellation</button>
           </div>
           <p className="text-center text-xs text-muted-foreground mt-8">

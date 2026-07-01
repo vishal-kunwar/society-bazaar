@@ -411,3 +411,157 @@ export function AboutPolicy() {
     </PolicyLayout>
   );
 }
+
+export function PrivacyPolicy() {
+  return (
+    <PolicyLayout title="Privacy Policy">
+        <p key={0} className="leading-relaxed mb-4">
+          {"Privacy Policy"}
+        </p>
+        <p key={1} className="leading-relaxed mb-4">
+          {"Last Updated: July 1, 2026"}
+        </p>
+        <p key={2} className="leading-relaxed mb-4">
+          {"Welcome to GoHustly. We value your privacy and are committed to protecting your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit or use our platform."}
+        </p>
+        
+        <hr key={3} className="my-8 border-border" />
+        
+        <h2 key={4} className="text-xl font-semibold mt-8 mb-4">1. Information We Collect</h2>
+        <p key={5} className="leading-relaxed mb-4">
+          {"We collect information that you directly provide to us, as well as information automatically collected when you use our platform."}
+        </p>
+        <p key={6} className="leading-relaxed mb-4">
+          {"Personal and Business Information collected includes:"}
+        </p>
+        <ul key={7} className="list-disc pl-6 space-y-1 mb-4">
+          <li key={0}>{"Full Name"}</li>
+          <li key={1}>{"Mobile Number"}</li>
+          <li key={2}>{"Email Address"}</li>
+          <li key={3}>{"WhatsApp Number (if provided)"}</li>
+          <li key={4}>{"Business Name"}</li>
+          <li key={5}>{"Business Category"}</li>
+          <li key={6}>{"Society Name"}</li>
+          <li key={7}>{"Area"}</li>
+          <li key={8}>{"City"}</li>
+          <li key={9}>{"Business Description"}</li>
+          <li key={10}>{"Business Images"}</li>
+          <li key={11}>{"Profile Photo (if uploaded)"}</li>
+        </ul>
+        <p key={8} className="leading-relaxed mb-4">
+          {"Technical and Usage Information automatically collected includes:"}
+        </p>
+        <ul key={9} className="list-disc pl-6 space-y-1 mb-4">
+          <li key={0}>{"Device and browser information"}</li>
+          <li key={1}>{"IP address"}</li>
+          <li key={2}>{"Login history and usage information"}</li>
+        </ul>
+
+        <hr key={10} className="my-8 border-border" />
+
+        <h2 key={11} className="text-xl font-semibold mt-8 mb-4">2. How We Use Your Information</h2>
+        <p key={12} className="leading-relaxed mb-4">
+          {"We use the collected information for various business purposes, including to:"}
+        </p>
+        <ul key={13} className="list-disc pl-6 space-y-1 mb-4">
+          <li key={0}>{"Create and manage your user or seller accounts"}</li>
+          <li key={1}>{"Display seller business listings on the platform"}</li>
+          <li key={2}>{"Connect buyers and sellers within the local community"}</li>
+          <li key={3}>{"Verify seller identity and prevent duplicate listings"}</li>
+          <li key={4}>{"Send OTPs (One-Time Passwords) and important account notifications"}</li>
+          <li key={5}>{"Provide customer support and resolve user queries"}</li>
+          <li key={6}>{"Improve platform performance, features, and overall user experience"}</li>
+          <li key={7}>{"Monitor, detect, and prevent fraud, abuse, and security threats"}</li>
+          <li key={8}>{"Comply with applicable legal and regulatory obligations in India"}</li>
+        </ul>
+
+        <hr key={14} className="my-8 border-border" />
+
+        <h2 key={15} className="text-xl font-semibold mt-8 mb-4">3. Public Information</h2>
+        <p key={16} className="leading-relaxed mb-4">
+          {"GoHustly is a public marketplace platform. Information that you intentionally submit for inclusion in a business listing (such as your business name, description, category, service area, business images, and any contact details you choose to display) is intended to be public and may be visible to all users of the platform, including search engines and external websites."}
+        </p>
+
+        <hr key={17} className="my-8 border-border" />
+
+        <h2 key={18} className="text-xl font-semibold mt-8 mb-4">4. Data Sharing</h2>
+        <p key={19} className="leading-relaxed mb-4">
+          {"GoHustly does NOT sell, rent, or trade your personal information to third parties for marketing purposes."}
+        </p>
+        <p key={20} className="leading-relaxed mb-4">
+          {"We may share information only in the following circumstances:"}
+        </p>
+        <ul key={21} className="list-disc pl-6 space-y-1 mb-4">
+          <li key={0}>{"With trusted third-party service providers necessary to operate, maintain, and secure the platform (e.g., OTP delivery, database hosting, cloud storage)"}</li>
+          <li key={1}>{"When required by law, court order, or governmental authorities to comply with legal processes"}</li>
+          <li key={2}>{"To protect the safety, rights, property, or security of GoHustly, our users, or the general public against fraud or abuse"}</li>
+        </ul>
+
+        <hr key={22} className="my-8 border-border" />
+
+        <h2 key={23} className="text-xl font-semibold mt-8 mb-4">5. Cookies & Analytics</h2>
+        <p key={24} className="leading-relaxed mb-4">
+          {"We may use cookies, web beacons, and similar tracking technologies to track user activity, maintain active login sessions, improve platform security, and perform analytical assessments to understand user preferences and behavior."}
+        </p>
+
+        <hr key={25} className="my-8 border-border" />
+
+        <h2 key={26} className="text-xl font-semibold mt-8 mb-4">6. Data Security</h2>
+        <p key={27} className="leading-relaxed mb-4">
+          {"We implement reasonable technical and organizational security measures to safeguard your personal data from unauthorized access, alteration, disclosure, or destruction. However, please note that no method of transmission over the internet or electronic storage is completely secure, and we cannot guarantee absolute security."}
+        </p>
+
+        <hr key={28} className="my-8 border-border" />
+
+        <h2 key={29} className="text-xl font-semibold mt-8 mb-4">7. Data Retention</h2>
+        <p key={30} className="leading-relaxed mb-4">
+          {"We retain your personal information for as long as your account remains active or as needed to provide our services. We may also retain certain information post-account deletion for legal compliance, fraud prevention, taxation, auditing, and resolving disputes, as required by applicable laws."}
+        </p>
+
+        <hr key={31} className="my-8 border-border" />
+
+        <h2 key={32} className="text-xl font-semibold mt-8 mb-4">8. User Rights</h2>
+        <p key={33} className="leading-relaxed mb-4">
+          {"You have rights regarding your personal information under applicable regulations, including:"}
+        </p>
+        <ul key={34} className="list-disc pl-6 space-y-1 mb-4">
+          <li key={0}>{"The right to access and review the personal information we hold about you"}</li>
+          <li key={1}>{"The right to request corrections or updates to inaccurate or incomplete information"}</li>
+          <li key={2}>{"The right to request deletion of your account and associated personal data"}</li>
+          <li key={3}>{"The right to contact us to register complaints or raise privacy-related concerns"}</li>
+        </ul>
+
+        <hr key={35} className="my-8 border-border" />
+
+        <h2 key={36} className="text-xl font-semibold mt-8 mb-4">9. Children's Privacy</h2>
+        <p key={37} className="leading-relaxed mb-4">
+          {"GoHustly is not designed, intended, or structured for users under 18 years of age. We do not knowingly collect personal information from individuals under 18. If we learn we have collected information from a minor, we will delete it promptly."}
+        </p>
+
+        <hr key={38} className="my-8 border-border" />
+
+        <h2 key={39} className="text-xl font-semibold mt-8 mb-4">10. Changes to this Privacy Policy</h2>
+        <p key={40} className="leading-relaxed mb-4">
+          {"We may update this Privacy Policy from time to time to reflect changes in our practices or legal obligations. The 'Last Updated' date at the top of this policy indicates when the most recent changes were made. Your continued use of the platform after any updates indicates your acceptance of the revised policy."}
+        </p>
+
+        <hr key={41} className="my-8 border-border" />
+
+        <h2 key={42} className="text-xl font-semibold mt-8 mb-4">11. Contact Us</h2>
+        <p key={43} className="leading-relaxed mb-4">
+          {"If you have questions, feedback, or concerns regarding your privacy or this Privacy Policy, please reach out to us:"}
+        </p>
+        <p key={44} className="leading-relaxed mb-4">
+          {"Support Email: support.GoHustly@gmail.com"}
+        </p>
+        <p key={45} className="leading-relaxed mb-4">
+          {"You may also contact us via the Contact Us page on our platform."}
+        </p>
+        <hr key={46} className="my-8 border-border" />
+        <p key={47} className="leading-relaxed mb-4">
+          {"Thank you for trusting GoHustly."}
+        </p>
+    </PolicyLayout>
+  );
+}
+
