@@ -141,6 +141,9 @@ router.post("/businesses", requireAuth, async (req: Request, res: Response, next
       ...req.body,
       societyId: Number(req.body.societyId),
       yearsInBusiness: req.body.yearsInBusiness ? Number(req.body.yearsInBusiness) : undefined,
+      // Coerce ISO strings to Date objects (drizzle-zod maps timestamp → z.date())
+      termsAcceptedAt: req.body.termsAcceptedAt ? new Date(req.body.termsAcceptedAt) : undefined,
+      privacyAcceptedAt: req.body.privacyAcceptedAt ? new Date(req.body.privacyAcceptedAt) : undefined,
     });
 
     const [business] = await db
