@@ -54,7 +54,7 @@ export function Navbar({ leftContent, rightContent, mobileContent }: NavbarProps
             exit={{ opacity: 0, height: 0 }}
             className="md:hidden border-t border-border/40 bg-background overflow-hidden shadow-lg"
           >
-            <div className="px-4 py-3 flex flex-col gap-2">
+            <div className="px-4 py-3 flex flex-col gap-2" onClick={() => setMobileMenuOpen(false)}>
               {mobileContent}
             </div>
           </motion.div>
