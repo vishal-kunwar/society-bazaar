@@ -1,6 +1,6 @@
 import { db } from "@workspace/db";
 import { businessesTable, leadsTable } from "@workspace/db";
-import { eq, sql, inArray } from "drizzle-orm";
+import { eq, sql, inArray, and } from "drizzle-orm";
 
 export interface SellerSubscriptionStatus {
   isPro: boolean;
@@ -68,7 +68,12 @@ export async function getSellerSubscriptionStatus(clerkUserId: string): Promise<
     const leads = await db
       .select({ count: sql<number>`count(*)` })
       .from(leadsTable)
-      .where(inArray(leadsTable.businessId, businessIds));
+      .where(
+        and(
+          inArray(leadsTable.businessId, businessIds),
+          sql`${leadsTable.source} != 'repeat'`
+        )
+      );
     totalLeads = Number(leads[0]?.count || 0);
   }
 

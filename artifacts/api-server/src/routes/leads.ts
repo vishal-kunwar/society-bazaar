@@ -1,14 +1,11 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { leadsTable, businessesTable } from "@workspace/db";
-import { eq, and, gte, isNull } from "drizzle-orm";
+import { eq, and, gte, isNull, sql } from "drizzle-orm";
 import type { Request, Response } from "express";
 import { getAuth as clerkGetAuth } from "@clerk/express";
 
 const router = Router();
-
-const AUTH_LEAD_DEDUP_MS = 24 * 60 * 60 * 1000;
-const ANON_LEAD_DEDUP_MS = 60 * 60 * 1000;
 
 function getClientIp(req: Request): string | null {
   const xff = req.headers["x-forwarded-for"];
@@ -43,56 +40,50 @@ router.post("/leads", async (req: Request, res: Response) => {
     return;
   }
 
-  if (leadSource !== "repeat") {
-    const dedupMs = clerkUserId ? AUTH_LEAD_DEDUP_MS : ANON_LEAD_DEDUP_MS;
-    const since = new Date(Date.now() - dedupMs);
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const clientIp = getClientIp(req);
+  let existingUniqueLead = null;
 
-    if (clerkUserId) {
-      const [existing] = await db
-        .select()
-        .from(leadsTable)
-        .where(
-          and(
-            eq(leadsTable.businessId, Number(businessId)),
-            eq(leadsTable.clerkUserId, clerkUserId),
-            gte(leadsTable.createdAt, since),
-          ),
-        )
-        .limit(1);
-      if (existing) {
-        res.status(200).json(existing);
-        return;
-      }
-    } else {
-      const clientIp = getClientIp(req);
-      if (clientIp) {
-        const [existing] = await db
-          .select()
-          .from(leadsTable)
-          .where(
-            and(
-              eq(leadsTable.businessId, Number(businessId)),
-              isNull(leadsTable.clerkUserId),
-              eq(leadsTable.ipAddress, clientIp),
-              gte(leadsTable.createdAt, since),
-            ),
-          )
-          .limit(1);
-        if (existing) {
-          res.status(200).json(existing);
-          return;
-        }
-      }
-    }
+  if (clerkUserId) {
+    const [existing] = await db
+      .select()
+      .from(leadsTable)
+      .where(
+        and(
+          eq(leadsTable.businessId, Number(businessId)),
+          eq(leadsTable.clerkUserId, clerkUserId),
+          sql`${leadsTable.source} != 'repeat'`,
+          gte(leadsTable.createdAt, thirtyDaysAgo),
+        ),
+      )
+      .limit(1);
+    existingUniqueLead = existing || null;
+  } else if (clientIp) {
+    const [existing] = await db
+      .select()
+      .from(leadsTable)
+      .where(
+        and(
+          eq(leadsTable.businessId, Number(businessId)),
+          isNull(leadsTable.clerkUserId),
+          eq(leadsTable.ipAddress, clientIp),
+          sql`${leadsTable.source} != 'repeat'`,
+          gte(leadsTable.createdAt, thirtyDaysAgo),
+        ),
+      )
+      .limit(1);
+    existingUniqueLead = existing || null;
   }
+
+  const finalSource = existingUniqueLead ? "repeat" : leadSource;
 
   const [lead] = await db
     .insert(leadsTable)
     .values({
       businessId: Number(businessId),
       clerkUserId,
-      ipAddress: clerkUserId ? null : getClientIp(req),
-      source: leadSource,
+      ipAddress: clerkUserId ? null : clientIp,
+      source: finalSource,
     })
     .returning();
 

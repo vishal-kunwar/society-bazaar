@@ -901,7 +901,7 @@ export default function SellerDashboard() {
 
   const statCards = [
     { label: "Leads This Month", value: analyticsLoading ? "…" : analytics?.leadsThisMonth ?? 0, icon: MessageCircle, color: "text-primary", bg: "bg-primary/10" },
-    { label: "Total Leads", value: analyticsLoading ? "…" : analytics?.totalLeads ?? 0, icon: TrendingUp, color: "text-blue-600", bg: "bg-blue-100" },
+    { label: "Total Leads", value: analyticsLoading ? "…" : `${analytics?.totalLeads ?? 0} (${analytics?.totalClicks ?? 0} clicks)`, icon: TrendingUp, color: "text-blue-600", bg: "bg-blue-100" },
     { label: "Repeat Customers", value: analyticsLoading ? "…" : analytics?.repeatLeads ?? 0, icon: RefreshCw, color: "text-orange-600", bg: "bg-orange-100" },
     { label: "Avg. Rating", value: analyticsLoading ? "…" : `${Number(analytics?.avgRating ?? 0).toFixed(1)} ⭐`, icon: Star, color: "text-yellow-600", bg: "bg-yellow-100" },
   ];

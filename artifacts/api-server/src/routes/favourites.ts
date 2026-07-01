@@ -17,7 +17,7 @@ router.get("/favourites", requireAuth, async (req: Request, res: Response) => {
       society: societiesTable,
       avgRating: sql<number>`COALESCE(AVG(${reviewsTable.rating}), 0)`,
       reviewCount: sql<number>`COUNT(DISTINCT ${reviewsTable.id})`,
-      leadCount: sql<number>`COUNT(DISTINCT ${leadsTable.id})`,
+      leadCount: sql<number>`COUNT(DISTINCT CASE WHEN ${leadsTable.source} != 'repeat' THEN ${leadsTable.id} END)`,
     })
     .from(favouritesTable)
     .innerJoin(businessesTable, eq(favouritesTable.businessId, businessesTable.id))

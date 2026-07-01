@@ -146,6 +146,7 @@ export interface SellerAnalytics {
   leadsThisMonth: number;
   totalLeads: number;
   repeatLeads: number;
+  totalClicks?: number;
   avgRating: number;
   reviewCount: number;
   subscriptionStartDate: string;

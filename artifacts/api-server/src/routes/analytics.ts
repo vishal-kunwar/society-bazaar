@@ -32,6 +32,7 @@ router.get("/analytics/seller", requireAuth, async (req: Request, res: Response)
     .where(
       and(
         sql`${leadsTable.businessId} = ANY(${sql.raw(`ARRAY[${bizIds.join(",")}]`)})`,
+        sql`${leadsTable.source} != 'repeat'`,
         gte(leadsTable.createdAt, monthStart),
       ),
     );
@@ -39,7 +40,12 @@ router.get("/analytics/seller", requireAuth, async (req: Request, res: Response)
   const [totalLeadsRow] = await db
     .select({ count: count() })
     .from(leadsTable)
-    .where(sql`${leadsTable.businessId} = ANY(${sql.raw(`ARRAY[${bizIds.join(",")}]`)})`);
+    .where(
+      and(
+        sql`${leadsTable.businessId} = ANY(${sql.raw(`ARRAY[${bizIds.join(",")}]`)})`,
+        sql`${leadsTable.source} != 'repeat'`
+      )
+    );
 
   const [repeatLeadsRow] = await db
     .select({ count: count() })
@@ -50,6 +56,11 @@ router.get("/analytics/seller", requireAuth, async (req: Request, res: Response)
         eq(leadsTable.source, "repeat"),
       ),
     );
+
+  const [totalClicksRow] = await db
+    .select({ count: count() })
+    .from(leadsTable)
+    .where(sql`${leadsTable.businessId} = ANY(${sql.raw(`ARRAY[${bizIds.join(",")}]`)})`);
 
   const [ratingsRow] = await db
     .select({
@@ -63,6 +74,7 @@ router.get("/analytics/seller", requireAuth, async (req: Request, res: Response)
     leadsThisMonth: Number(leadsThisMonthRow?.count ?? 0),
     totalLeads: Number(totalLeadsRow?.count ?? 0),
     repeatLeads: Number(repeatLeadsRow?.count ?? 0),
+    totalClicks: Number(totalClicksRow?.count ?? 0),
     avgRating: Number(ratingsRow?.avg ?? 0),
     reviewCount: Number(ratingsRow?.cnt ?? 0),
     subscriptionStartDate: businesses.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())[0]?.createdAt,

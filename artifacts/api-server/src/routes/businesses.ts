@@ -20,7 +20,7 @@ router.get("/businesses", async (req: Request, res: Response) => {
       society: societiesTable,
       avgRating: sql<number>`COALESCE(AVG(${reviewsTable.rating}), 0)`,
       reviewCount: sql<number>`COUNT(DISTINCT ${reviewsTable.id})`,
-      leadCount: sql<number>`COUNT(DISTINCT ${leadsTable.id})`,
+      leadCount: sql<number>`COUNT(DISTINCT CASE WHEN ${leadsTable.source} != 'repeat' THEN ${leadsTable.id} END)`,
     })
     .from(businessesTable)
     .leftJoin(societiesTable, eq(businessesTable.societyId, societiesTable.id))
@@ -77,7 +77,7 @@ router.get("/businesses/:id", async (req: Request, res: Response) => {
       society: societiesTable,
       avgRating: sql<number>`COALESCE(AVG(${reviewsTable.rating}), 0)`,
       reviewCount: sql<number>`COUNT(DISTINCT ${reviewsTable.id})`,
-      leadCount: sql<number>`COUNT(DISTINCT ${leadsTable.id})`,
+      leadCount: sql<number>`COUNT(DISTINCT CASE WHEN ${leadsTable.source} != 'repeat' THEN ${leadsTable.id} END)`,
     })
     .from(businessesTable)
     .leftJoin(societiesTable, eq(businessesTable.societyId, societiesTable.id))
@@ -255,7 +255,7 @@ router.get("/my-businesses", requireAuth, async (req: Request, res: Response) =>
       society: societiesTable,
       avgRating: sql<number>`COALESCE(AVG(${reviewsTable.rating}), 0)`,
       reviewCount: sql<number>`COUNT(DISTINCT ${reviewsTable.id})`,
-      leadCount: sql<number>`COUNT(DISTINCT ${leadsTable.id})`,
+      leadCount: sql<number>`COUNT(DISTINCT CASE WHEN ${leadsTable.source} != 'repeat' THEN ${leadsTable.id} END)`,
     })
     .from(businessesTable)
     .leftJoin(societiesTable, eq(businessesTable.societyId, societiesTable.id))
