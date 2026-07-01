@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, integer, pgEnum, varchar } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, integer, pgEnum, varchar, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { societiesTable } from "./societies";
@@ -59,6 +59,12 @@ export const businessesTable = pgTable("businesses", {
   priceRange: text("price_range"),
   servicesOffered: varchar("services_offered", { length: 500 }),
   coverImageUrl: text("cover_image_url"),
+
+  // Consent fields
+  termsAccepted: boolean("terms_accepted").notNull().default(false),
+  termsAcceptedAt: timestamp("terms_accepted_at", { withTimezone: true }),
+  privacyAccepted: boolean("privacy_accepted").notNull().default(false),
+  privacyAcceptedAt: timestamp("privacy_accepted_at", { withTimezone: true }),
 });
 
 export const insertBusinessSchema = createInsertSchema(businessesTable).omit({

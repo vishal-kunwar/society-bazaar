@@ -206,6 +206,7 @@ export default function Sell() {
     phone: user?.primaryPhoneNumber?.phoneNumber ?? "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [acceptedPolicies, setAcceptedPolicies] = useState(false);
 
   const { data: societies } = useQuery({
     queryKey: ["societies", formData.city, formData.locality],
@@ -241,6 +242,10 @@ export default function Sell() {
         servicesOffered: formData.servicesOffered,
         imageUrl: formData.imageUrl,
         coverImageUrl: formData.coverImageUrl,
+        termsAccepted: true,
+        termsAcceptedAt: new Date().toISOString(),
+        privacyAccepted: true,
+        privacyAcceptedAt: new Date().toISOString(),
       });
     },
     onSuccess: () => setSubmitted(true),
@@ -266,8 +271,15 @@ export default function Sell() {
       toast({ title: "Please fill in required fields", variant: "destructive" });
       return;
     }
-    if (step < 7) setStep(s => s + 1);
-    else createBusiness.mutate();
+    if (step < 7) {
+      setStep(s => s + 1);
+    } else {
+      if (!acceptedPolicies) {
+        toast({ title: "You must accept the Terms & Conditions and Privacy Policy to continue.", variant: "destructive" });
+        return;
+      }
+      createBusiness.mutate();
+    }
   }
 
   const slideVariants = {
@@ -653,6 +665,23 @@ export default function Sell() {
                       <p className="font-semibold text-foreground mb-1">After submitting:</p>
                       <p>Our team reviews your listing within 24 hours. Once approved, your profile goes live and buyers can start contacting you instantly.</p>
                     </div>
+
+                    {/* Policy Acceptance Checkbox */}
+                    <div className="flex items-start gap-3 mt-6 p-4 rounded-xl border border-border bg-card">
+                      <input
+                        id="agree-policies"
+                        type="checkbox"
+                        checked={acceptedPolicies}
+                        onChange={(e) => setAcceptedPolicies(e.target.checked)}
+                        className="h-4.5 w-4.5 rounded border-gray-300 text-primary focus:ring-primary mt-1 cursor-pointer"
+                      />
+                      <label htmlFor="agree-policies" className="text-sm text-muted-foreground leading-normal cursor-pointer select-none">
+                        {"I have read and agree to the GoHustly "}
+                        <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold">Terms & Conditions</a>
+                        {" and "}
+                        <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold">Privacy Policy</a>.
+                      </label>
+                    </div>
                   </div>
                 )}
               </motion.div>
@@ -671,7 +700,7 @@ export default function Sell() {
 
               <Button
                 onClick={next}
-                disabled={createBusiness.isPending}
+                disabled={createBusiness.isPending || (step === 7 && !acceptedPolicies)}
                 className="gap-2 font-bold"
               >
                 {step === 7 ? (
