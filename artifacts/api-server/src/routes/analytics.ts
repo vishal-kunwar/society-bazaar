@@ -47,15 +47,24 @@ router.get("/analytics/seller", requireAuth, async (req: Request, res: Response)
       )
     );
 
-  const [repeatLeadsRow] = await db
-    .select({ count: count() })
+  const repeatCustomersQuery = await db
+    .select({
+      businessId: leadsTable.businessId,
+      customerId: sql<string>`COALESCE(${leadsTable.clerkUserId}, ${leadsTable.ipAddress})`,
+    })
     .from(leadsTable)
     .where(
       and(
         sql`${leadsTable.businessId} = ANY(${sql.raw(`ARRAY[${bizIds.join(",")}]`)})`,
-        eq(leadsTable.source, "repeat"),
-      ),
+        eq(leadsTable.source, "repeat")
+      )
+    )
+    .groupBy(
+      leadsTable.businessId,
+      sql`COALESCE(${leadsTable.clerkUserId}, ${leadsTable.ipAddress})`
     );
+
+  const repeatCount = repeatCustomersQuery.length;
 
   const [totalClicksRow] = await db
     .select({ count: count() })
@@ -73,7 +82,7 @@ router.get("/analytics/seller", requireAuth, async (req: Request, res: Response)
   res.json({
     leadsThisMonth: Number(leadsThisMonthRow?.count ?? 0),
     totalLeads: Number(totalLeadsRow?.count ?? 0),
-    repeatLeads: Number(repeatLeadsRow?.count ?? 0),
+    repeatLeads: repeatCount,
     totalClicks: Number(totalClicksRow?.count ?? 0),
     avgRating: Number(ratingsRow?.avg ?? 0),
     reviewCount: Number(ratingsRow?.cnt ?? 0),
