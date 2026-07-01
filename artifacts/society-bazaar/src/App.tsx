@@ -186,8 +186,8 @@ function ClerkProviderWithRoutes() {
       localization={{
         signIn: {
           start: {
-            title: "Welcome back to Hustly",
-            subtitle: "Sign in to manage your listings",
+            title: "Welcome back to GoHustly",
+            subtitle: "Sign in to manage your business.",
           },
         },
         signUp: {
