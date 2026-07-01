@@ -83,10 +83,10 @@ export default function SellerLanding() {
             </div>
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-foreground leading-tight mb-5">
               Grow your home business<br />
-              <span className="text-primary">in your own society.</span>
+              <span className="text-primary">across your neighbourhood.</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-              Connect directly with neighbours who want your delicious home-cooked meals, baked goods, classes, and home services.
+              Get discovered by nearby customers and connect with them directly on WhatsApp.
             </p>
             <div className="flex justify-center">
               <Button
@@ -230,9 +230,9 @@ export default function SellerLanding() {
       {/* Bottom CTA to Sign Up */}
       <section className="py-20 bg-primary text-primary-foreground border-t border-border/30">
         <div className="container mx-auto px-4 md:px-6 text-center">
-          <h2 className="text-3xl md:text-4xl font-extrabold mb-4">Start Selling Today</h2>
+          <h2 className="text-3xl md:text-4xl font-extrabold mb-4">Start Growing Your Business Today</h2>
           <p className="text-primary-foreground/80 text-lg mb-8 max-w-xl mx-auto">
-            Join other home businesses in your society. List your services and menu items in minutes.
+            Join local businesses already growing with GoHustly. Create your business profile in just a few minutes.
           </p>
           <div className="flex gap-4 justify-center">
             <Button
@@ -254,7 +254,7 @@ export default function SellerLanding() {
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <MapPin className="text-primary-foreground w-5 h-5" />
             </div>
-            <span className="font-extrabold text-xl">Hust<span className="text-primary">ly</span></span>
+            <span className="font-extrabold text-xl">GoHust<span className="text-primary">ly</span></span>
           </div>
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-8 text-sm text-muted-foreground">
               <button onClick={() => setLocation("/about")} className="hover:text-foreground transition-colors">About Us</button>
