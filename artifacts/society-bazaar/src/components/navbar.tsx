@@ -6,12 +6,18 @@ import { motion, AnimatePresence } from "framer-motion";
 interface NavbarProps {
   leftContent?: React.ReactNode;
   rightContent?: React.ReactNode;
-  mobileContent?: React.ReactNode;
+  mobileContent?: React.ReactNode | ((closeMenu: () => void) => React.ReactNode);
 }
 
 export function Navbar({ leftContent, rightContent, mobileContent }: NavbarProps) {
   const [, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const closeMenu = () => setMobileMenuOpen(false);
+
+  const renderedMobileContent = typeof mobileContent === "function"
+    ? mobileContent(closeMenu)
+    : mobileContent;
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/90 backdrop-blur-md transition-all">
@@ -47,16 +53,22 @@ export function Navbar({ leftContent, rightContent, mobileContent }: NavbarProps
 
       {/* Mobile menu */}
       <AnimatePresence>
-        {mobileMenuOpen && mobileContent && (
+        {mobileMenuOpen && renderedMobileContent && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className="md:hidden border-t border-border/40 bg-background overflow-hidden shadow-lg"
           >
-            <div className="px-4 py-3 flex flex-col gap-2" onClick={() => setMobileMenuOpen(false)}>
-              {mobileContent}
-            </div>
+            {typeof mobileContent === "function" ? (
+              <div className="px-4 py-3 flex flex-col gap-2">
+                {renderedMobileContent}
+              </div>
+            ) : (
+              <div className="px-4 py-3 flex flex-col gap-2" onClick={closeMenu}>
+                {renderedMobileContent}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

@@ -576,13 +576,18 @@ export default function Home() {
             )}
           </>
         }
-        mobileContent={
+        mobileContent={(closeMenu) => (
           <>
             <Button
               variant="ghost"
               size="sm"
               className="justify-start w-full"
-              onClick={() => { document.getElementById("explore")?.scrollIntoView({ behavior: "smooth" }); }}
+              onClick={() => {
+                closeMenu();
+                setTimeout(() => {
+                  document.getElementById("explore")?.scrollIntoView({ behavior: "smooth" });
+                }, 300);
+              }}
             >
               Explore
             </Button>
@@ -590,7 +595,10 @@ export default function Home() {
               variant="ghost"
               size="sm"
               className="justify-start w-full"
-              onClick={() => { setLocation("/seller-landing"); }}
+              onClick={() => {
+                setLocation("/seller-landing");
+                closeMenu();
+              }}
             >
               List Your Business
             </Button>
@@ -599,7 +607,10 @@ export default function Home() {
                 variant="outline"
                 size="sm"
                 className="justify-start w-full"
-                onClick={() => { setLocation("/dashboard"); }}
+                onClick={() => {
+                  setLocation("/dashboard");
+                  closeMenu();
+                }}
               >
                 Dashboard
               </Button>
@@ -608,13 +619,16 @@ export default function Home() {
                 variant="outline"
                 size="sm"
                 className="justify-start w-full"
-                onClick={() => { setLocation("/sign-in"); }}
+                onClick={() => {
+                  setLocation("/sign-in");
+                  closeMenu();
+                }}
               >
                 Seller Login
               </Button>
             )}
           </>
-        }
+        )}
       />
 
       {/* ── Hero ── */}
