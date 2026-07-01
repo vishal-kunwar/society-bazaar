@@ -61,16 +61,31 @@ export default function SellerLanding() {
             </Button>
           </>
         }
-        mobileContent={
+        mobileContent={(closeMenu) => (
           <>
-            <Button variant="ghost" size="sm" className="justify-start w-full" onClick={() => setLocation("/")}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="justify-start w-full"
+              onClick={() => {
+                setLocation("/");
+                closeMenu();
+              }}
+            >
               Explore Marketplace
             </Button>
-            <Button size="sm" className="justify-start w-full" onClick={handleSellerCTA}>
+            <Button
+              size="sm"
+              className="justify-start w-full"
+              onClick={() => {
+                handleSellerCTA();
+                closeMenu();
+              }}
+            >
               {isSignedIn ? "My Dashboard" : "Start Your Hustle"}
             </Button>
           </>
-        }
+        )}
       />
 
       {/* Hero */}
